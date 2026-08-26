@@ -109,7 +109,7 @@ if (config.nodeEnv === 'production') {
 }
 
 // CORS configuration
-const corsAllowlist = new Set(config.corsOrigins || [config.corsOrigin]);
+const corsAllowlist = new Set((config.corsOrigins || [config.corsOrigin]).map((o) => o.replace(/\/+$/, '')));
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -117,11 +117,23 @@ app.use(cors({
       return callback(null, true);
     }
 
-    if (corsAllowlist.has(origin)) {
+    const cleanOrigin = origin.replace(/\/+$/, '');
+
+    if (corsAllowlist.has(cleanOrigin)) {
       return callback(null, true);
     }
 
-    const isLocalDevOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|localhost\.local)(:\d+)?$/.test(origin);
+    // Allow process.env.RENDER_EXTERNAL_URL if set by Render
+    if (process.env.RENDER_EXTERNAL_URL && cleanOrigin === process.env.RENDER_EXTERNAL_URL.replace(/\/+$/, '')) {
+      return callback(null, true);
+    }
+
+    // Automatically allow any Render deployment domain (*.onrender.com)
+    if (/^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    const isLocalDevOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|localhost\.local)(:\d+)?$/.test(cleanOrigin);
     if (config.nodeEnv !== 'production' && isLocalDevOrigin) {
       return callback(null, true);
     }

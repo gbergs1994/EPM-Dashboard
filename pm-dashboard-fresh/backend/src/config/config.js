@@ -4,14 +4,19 @@ const defaultCorsOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost.local:3000', 
-  'http://localhost:5001/' //added as of 6-14-26 to avoid CORS origin blocked error
+  'http://localhost:5001',
+  'https://epm-dashboard-uohl.onrender.com'
 ];
+
+if (process.env.RENDER_EXTERNAL_URL) {
+  defaultCorsOrigins.push(process.env.RENDER_EXTERNAL_URL);
+}
 
 const corsOrigins = (process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
   : defaultCorsOrigins
 )
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 const config = {
