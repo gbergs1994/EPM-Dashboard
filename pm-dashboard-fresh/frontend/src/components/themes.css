@@ -1,0 +1,633 @@
+/* themes.css - Add this to your project */
+
+/* Light Theme Variables */
+:root,
+.light-theme {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --accent-primary: #2563eb;
+  --accent-secondary: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme Variables */
+.dark-theme {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #cbd5e1;
+  --border-primary: #374151;
+  --border-secondary: #4b5563;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #60a5fa;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --sidebar-bg: #1f2937;
+  --card-bg: #1f2937;
+  --input-bg: #374151;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Apply theme variables only when dark mode is active (do not alter day mode) */
+.dark-theme body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark-theme #root {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Cards and containers */
+.dark-theme .card,
+.dark-theme .settings-card,
+.dark-theme .project-card,
+.dark-theme .modal-content {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+  box-shadow: 0 1px 3px var(--shadow) !important;
+}
+
+/* Sidebar */
+.dark-theme .sidebar {
+  background-color: var(--sidebar-bg) !important;
+  border-color: var(--border-primary) !important;
+}
+
+/* Inputs */
+.dark-theme input,
+.dark-theme textarea,
+.dark-theme select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--border-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme input:focus,
+.dark-theme textarea:focus,
+.dark-theme select:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Text elements */
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme p {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .text-muted {
+  color: var(--text-tertiary) !important;
+}
+
+/* Borders */
+.dark-theme .border {
+  border-color: var(--border-primary) !important;
+}
+
+/*
+  The app uses many inline styles. Keep light mode untouched and only
+  remap common light surfaces/text/borders when dark mode is active.
+*/
+.dark-theme [style*="background-color: white"],
+.dark-theme [style*="background-color:white"],
+.dark-theme [style*="background-color:#fff"],
+.dark-theme [style*="background-color: #fff"],
+.dark-theme [style*="background-color: #ffffff"],
+.dark-theme [style*="background-color:#ffffff"],
+.dark-theme [style*="background-color: rgb(255, 255, 255)"],
+.dark-theme [style*="background-color:#f9fafb"],
+.dark-theme [style*="background-color: #f9fafb"],
+.dark-theme [style*="background-color:#f3f4f6"],
+.dark-theme [style*="background-color: #f3f4f6"],
+.dark-theme [style*="background-color:#f8fafc"],
+.dark-theme [style*="background-color: #f8fafc"],
+.dark-theme [style*="background-color:#eff6ff"],
+.dark-theme [style*="background-color: #eff6ff"],
+.dark-theme [style*="background-color:#eef2ff"],
+.dark-theme [style*="background-color: #eef2ff"] {
+  background-color: var(--card-bg) !important;
+}
+
+.dark-theme [style*="background: white"],
+.dark-theme [style*="background:white"],
+.dark-theme [style*="background: #fff"],
+.dark-theme [style*="background:#fff"],
+.dark-theme [style*="background: #ffffff"],
+.dark-theme [style*="background:#ffffff"],
+.dark-theme [style*="background: rgb(255, 255, 255)"],
+.dark-theme [style*="background: #f9fafb"],
+.dark-theme [style*="background: #f8fafc"],
+.dark-theme [style*="background: #f3f4f6"],
+.dark-theme [style*="background: #eff6ff"],
+.dark-theme [style*="background: #eef2ff"] {
+  background: var(--card-bg) !important;
+}
+
+.dark-theme [style*="rgba(255, 255, 255"],
+.dark-theme [style*="rgba(248, 250, 252"],
+.dark-theme [style*="rgba(249, 250, 251"] {
+  background-color: var(--card-bg) !important;
+}
+
+.dark-theme [style*="linear-gradient"][style*="#fff"],
+.dark-theme [style*="linear-gradient"][style*="#ffffff"],
+.dark-theme [style*="linear-gradient"][style*="rgb(255, 255, 255)"],
+.dark-theme [style*="linear-gradient"][style*="#f9fafb"],
+.dark-theme [style*="linear-gradient"][style*="#f8fafc"],
+.dark-theme [style*="linear-gradient"][style*="#f3f4f6"],
+.dark-theme [style*="radial-gradient"][style*="#fff"],
+.dark-theme [style*="radial-gradient"][style*="#ffffff"],
+.dark-theme [style*="radial-gradient"][style*="rgb(255, 255, 255)"] {
+  background-image: none !important;
+  background-color: var(--card-bg) !important;
+}
+
+.dark-theme [class~="bg-white"],
+.dark-theme [class~="bg-gray-50"],
+.dark-theme [class~="bg-slate-50"],
+.dark-theme [class~="bg-zinc-50"],
+.dark-theme [class~="bg-neutral-50"],
+.dark-theme [class~="bg-stone-50"] {
+  background-color: var(--card-bg) !important;
+}
+
+.dark-theme [style*="color: #111827"],
+.dark-theme [style*="color:#111827"],
+.dark-theme [style*="color: #1f2937"],
+.dark-theme [style*="color:#1f2937"],
+.dark-theme [style*="color: #374151"] {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme [style*="color: #6b7280"],
+.dark-theme [style*="color:#6b7280"],
+.dark-theme [style*="color: #64748b"] {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme [style*="color: #9ca3af"] {
+  color: var(--text-tertiary) !important;
+}
+
+.dark-theme [style*="color: #94a3b8"],
+.dark-theme [style*="color: #cbd5e1"] {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme [style*="border: 1px solid #e5e7eb"],
+.dark-theme [style*="border: 1px solid #d1d5db"],
+.dark-theme [style*="border-color: #e5e7eb"],
+.dark-theme [style*="border-color: #d1d5db"] {
+  border-color: var(--border-primary) !important;
+}
+
+/* Career development and modal surfaces that are styled in component CSS */
+.dark-theme .career-development-container .stat-card,
+.dark-theme .career-development-container .progress-overview,
+.dark-theme .career-development-container .goal-card,
+.dark-theme .career-development-container .activity-item,
+.dark-theme .career-development-container .milestone-item,
+.dark-theme .career-development-container .recommendation-card,
+.dark-theme .career-development-container .skill-gap-card,
+.dark-theme .career-development-container .timeline-item,
+.dark-theme .career-development-container .insight-card,
+.dark-theme .career-development-container .summary-card,
+.dark-theme .career-development-container .notes-entry-simple,
+.dark-theme .career-development-container .progress-history-entry,
+.dark-theme .career-development-container .notes-goal-header,
+.dark-theme .career-development-container .progress-form,
+.dark-theme .career-development-container .goal-form,
+.dark-theme .career-development-container .modal-body,
+.dark-theme .career-development-container .modal-header,
+.dark-theme .career-development-container .modal-footer {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+}
+
+/* Dashboard section shells and page surfaces */
+.dark-theme .pm-dashboard-shell,
+.dark-theme .dashboard-main-content,
+.dark-theme .dashboard-overview-screen,
+.dark-theme .project-manager-screen,
+.dark-theme .leadership-screen,
+.dark-theme .org-change-screen,
+.dark-theme .career-development-container {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .dashboard-overview-screen > div,
+.dark-theme .project-manager-screen > div,
+.dark-theme .leadership-screen > div,
+.dark-theme .org-change-screen > div,
+.dark-theme .career-development-container > div,
+.dark-theme .project-card {
+  color: inherit;
+}
+
+.dark-theme .dashboard-overview-screen h1,
+.dark-theme .dashboard-overview-screen h2,
+.dark-theme .dashboard-overview-screen h3,
+.dark-theme .project-manager-screen h1,
+.dark-theme .project-manager-screen h2,
+.dark-theme .project-manager-screen h3,
+.dark-theme .leadership-screen h2,
+.dark-theme .leadership-screen h3,
+.dark-theme .leadership-screen h4,
+.dark-theme .leadership-screen h5,
+.dark-theme .org-change-screen h2,
+.dark-theme .org-change-screen h3,
+.dark-theme .org-change-screen h4,
+.dark-theme .org-change-screen h5,
+.dark-theme .career-development-container h2,
+.dark-theme .career-development-container h3,
+.dark-theme .career-development-container h4 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .dashboard-overview-screen p,
+.dark-theme .dashboard-overview-screen span,
+.dark-theme .project-manager-screen p,
+.dark-theme .project-manager-screen span,
+.dark-theme .leadership-screen p,
+.dark-theme .leadership-screen span,
+.dark-theme .leadership-screen label,
+.dark-theme .org-change-screen p,
+.dark-theme .org-change-screen span,
+.dark-theme .org-change-screen label,
+.dark-theme .career-development-container p,
+.dark-theme .career-development-container span,
+.dark-theme .career-development-container label,
+.dark-theme .career-development-container .career-header-text p,
+.dark-theme .career-development-container .stat-text p:first-child,
+.dark-theme .career-development-container .progress-info p:last-child,
+.dark-theme .career-development-container .progress-percentage,
+.dark-theme .career-development-container .tab-button {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .dashboard-overview-screen [style*="linear-gradient(to right, #eff6ff, #eef2ff)"],
+.dark-theme .dashboard-overview-screen [style*="linear-gradient(to right,#eff6ff,#eef2ff)"],
+.dark-theme .leadership-screen [style*="background-color: #f9fafb"],
+.dark-theme .leadership-screen [style*="background-color:#f9fafb"],
+.dark-theme .org-change-screen [style*="background-color: #f9fafb"],
+.dark-theme .org-change-screen [style*="background-color:#f9fafb"],
+.dark-theme .org-change-screen [style*="background-color: #f3f4f6"],
+.dark-theme .org-change-screen [style*="background-color:#f3f4f6"] {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .project-manager-screen [style*="background-color:white"],
+.dark-theme .project-manager-screen [style*="background-color: white"],
+.dark-theme .leadership-screen [style*="background-color:white"],
+.dark-theme .leadership-screen [style*="background-color: white"],
+.dark-theme .org-change-screen [style*="background-color:white"],
+.dark-theme .org-change-screen [style*="background-color: white"],
+.dark-theme .dashboard-overview-screen [style*="background-color:white"],
+.dark-theme .dashboard-overview-screen [style*="background-color: white"] {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .project-card,
+.dark-theme .project-card > div,
+.dark-theme .leadership-screen select,
+.dark-theme .org-change-screen select,
+.dark-theme .career-development-container select,
+.dark-theme .career-development-container .tab-navigation,
+.dark-theme .career-development-container .stat-card,
+.dark-theme .career-development-container .progress-overview {
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .career-development-container {
+  min-height: 100%;
+}
+
+.dark-theme .career-development-container .career-header-text h2,
+.dark-theme .career-development-container .progress-info p:first-child,
+.dark-theme .career-development-container .stat-text p:last-child,
+.dark-theme .career-development-container .progress-overview h3,
+.dark-theme .career-development-container .tab-button:hover {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .team-management-screen,
+.dark-theme .team-member-management-screen,
+.dark-theme .project-details-screen,
+.dark-theme .project-details-overview,
+.dark-theme .iinc-screen,
+.dark-theme .iinc-overview-screen,
+.dark-theme .iinc-team-overview-screen {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .team-members-panel,
+.dark-theme .team-member-search-panel,
+.dark-theme .current-team-panel,
+.dark-theme .project-details-tab-nav,
+.dark-theme .project-description-card,
+.dark-theme .project-metrics-card,
+.dark-theme .project-activity-card,
+.dark-theme .project-stats-card,
+.dark-theme .project-team-preview-card,
+.dark-theme .project-ai-insights,
+.dark-theme .iinc-nav,
+.dark-theme .iinc-assessment-status-card,
+.dark-theme .iinc-framework-overview-card,
+.dark-theme .iinc-team-empty-state,
+.dark-theme .iinc-team-submission-card,
+.dark-theme .leadership-diamond-card,
+.dark-theme .leadership-dimension-score-card,
+.dark-theme .leadership-average-score-card,
+.dark-theme .ai-portfolio-insights,
+.dark-theme .project-stakeholder-card,
+.dark-theme .project-manager-mini-card,
+.dark-theme .quick-add-banner,
+.dark-theme .unassigned-members-banner,
+.dark-theme .team-empty-state,
+.dark-theme .current-team-empty-state,
+.dark-theme .career-development-container .insights-section,
+.dark-theme .career-development-container .insights-empty,
+.dark-theme .career-development-container .insights-loading,
+.dark-theme .career-development-container .insights-error {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .ai-portfolio-insights,
+.dark-theme .project-ai-insights {
+  background-image: none !important;
+}
+
+.dark-theme .ai-portfolio-insight-item,
+.dark-theme .project-ai-insight-item,
+.dark-theme .project-ai-insights [style*="rgba(255, 255, 255, 0.8)"],
+.dark-theme .project-ai-insights [style*="rgba(37, 99, 235, 0.1)"],
+.dark-theme .project-ai-insights [style*="rgba(139, 92, 246, 0.1)"],
+.dark-theme .quick-add-banner button {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .team-management-screen h1,
+.dark-theme .team-management-screen h2,
+.dark-theme .team-management-screen h3,
+.dark-theme .team-member-management-screen h2,
+.dark-theme .team-member-management-screen h3,
+.dark-theme .project-details-screen h1,
+.dark-theme .project-details-screen h2,
+.dark-theme .project-details-screen h3,
+.dark-theme .project-details-screen h4,
+.dark-theme .iinc-screen h2,
+.dark-theme .iinc-screen h3,
+.dark-theme .iinc-screen h4,
+.dark-theme .project-card p[style*="font-weight: 500"],
+.dark-theme .project-card p[style*="font-weight: '500'"],
+.dark-theme .project-card p[style*="font-weight: 600"],
+.dark-theme .project-card p[style*="font-weight: '600'"] {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .team-management-screen p,
+.dark-theme .team-management-screen span,
+.dark-theme .team-member-management-screen p,
+.dark-theme .team-member-management-screen span,
+.dark-theme .project-details-screen p,
+.dark-theme .project-details-screen span,
+.dark-theme .iinc-screen p,
+.dark-theme .iinc-screen span,
+.dark-theme .career-development-container .insights-empty p,
+.dark-theme .career-development-container .insights-loading span,
+.dark-theme .career-development-container .insights-error span {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .project-details-screen [style*="backgroundColor: '#f9fafb'"],
+.dark-theme .project-details-screen [style*="background-color: #f9fafb"],
+.dark-theme .project-details-screen [style*="backgroundColor: '#f3f4f6'"],
+.dark-theme .project-details-screen [style*="background-color: #f3f4f6"],
+.dark-theme .team-member-management-screen [style*="backgroundColor: '#f9fafb'"],
+.dark-theme .team-member-management-screen [style*="background-color: #f9fafb"],
+.dark-theme .iinc-screen [style*="backgroundColor: '#f9fafb'"],
+.dark-theme .iinc-screen [style*="background-color: #f9fafb"],
+.dark-theme .leadership-dimension-score-card [style*="backgroundColor: '#f3f4f6'"],
+.dark-theme .leadership-average-score-card,
+.dark-theme .team-empty-state,
+.dark-theme .current-team-empty-state,
+.dark-theme .iinc-team-empty-state,
+.dark-theme .career-development-container .insights-empty {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark-theme .team-management-screen .unassigned-members-banner p,
+.dark-theme .team-member-management-screen .quick-add-banner span,
+.dark-theme .project-ai-insights p,
+.dark-theme .ai-portfolio-insights p,
+.dark-theme .leadership-average-score-card div:last-child {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="true"] {
+  background-color: var(--sidebar-bg) !important;
+  border-right-color: var(--border-primary) !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="false"] {
+  background-color: #ffffff !important;
+  border-right-color: #e5e7eb !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="false"] .sidebar-user-name {
+  color: #111827 !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="false"] .sidebar-user-role {
+  color: #6b7280 !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="true"] p,
+.dark-theme .dashboard-sidebar[data-collapsed="true"] span,
+.dark-theme .dashboard-sidebar[data-collapsed="true"] button {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="background: #eff6ff"],
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="background:#eff6ff"],
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="backgroundColor: '#eff6ff'"],
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="background-color: #eff6ff"] {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: var(--accent-secondary) !important;
+}
+
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="background: transparent"],
+.dark-theme .dashboard-sidebar[data-collapsed="true"] nav button[style*="backgroundColor: 'transparent'"] {
+  background: transparent !important;
+}
+
+.dark-theme .dashboard-sidebar [style*="background: '#fee2e2'"],
+.dark-theme .dashboard-sidebar [style*="background: #fee2e2"],
+.dark-theme .dashboard-sidebar [style*="backgroundColor: '#fee2e2'"],
+.dark-theme .dashboard-sidebar [style*="background-color: #fee2e2"] {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fecaca !important;
+}
+
+.dark-theme .leadership-assessment-modal,
+.dark-theme .leadership-project-select-card,
+.dark-theme .leadership-question-card,
+.dark-theme .leadership-score-pill,
+.dark-theme .leadership-progress-indicator {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .leadership-assessment-modal h3,
+.dark-theme .leadership-assessment-modal h4,
+.dark-theme .leadership-assessment-modal h5,
+.dark-theme .leadership-question-card h4,
+.dark-theme .leadership-project-select-card h4 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .leadership-assessment-modal p,
+.dark-theme .leadership-assessment-modal span,
+.dark-theme .leadership-question-card p,
+.dark-theme .leadership-project-select-card p {
+  color: var(--text-secondary) !important;
+}
+
+.dark-theme .leadership-assessment-modal input[type="range"] {
+  filter: brightness(0.95);
+}
+
+.dark-theme .leadership-assessment-modal select,
+.dark-theme .leadership-assessment-modal button[style*="backgroundColor: 'white'"],
+.dark-theme .leadership-assessment-modal button[style*="backgroundColor: '#f9fafb'"],
+.dark-theme .leadership-assessment-modal button[style*="backgroundColor: 'white'"],
+.dark-theme .leadership-assessment-modal button[style*="backgroundColor: '#f3f4f6'"] {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .project-status-chip,
+.dark-theme .project-priority-chip {
+  color: #f8fafc !important;
+  border-color: transparent !important;
+}
+
+.dark-theme .project-status-chip {
+  background-color: #7c5a10 !important;
+}
+
+.dark-theme .project-priority-chip {
+  background-color: #5b4613 !important;
+}
+
+.dark-theme .project-ai-insights h3,
+.dark-theme .ai-portfolio-insights h3 {
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .project-details-screen button[style*="background: none"],
+.dark-theme .project-details-screen button[style*="background: 'none'"],
+.dark-theme .team-member-management-screen button[style*="backgroundColor: '#f3f4f6'"],
+.dark-theme .iinc-screen button[style*="backgroundColor: '#f3f4f6'"],
+.dark-theme .project-details-screen button[style*="backgroundColor: '#f3f4f6'"] {
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .iinc-framework-overview-card > div > div {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Chat and AI assistant panels */
+.dark-theme .chatbox,
+.dark-theme .chat-messages,
+.dark-theme .ai-chat-container,
+.dark-theme .ai-chat-messages,
+.dark-theme .ai-chat-input-form,
+.dark-theme .chat-message.ai .message-content,
+.dark-theme .ai-chat-container .ai-message .message-content {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-primary) !important;
+}
+
+.dark-theme .chat-error,
+.dark-theme .ai-chat-error,
+.dark-theme .chat-message.error .message-content,
+.dark-theme .ai-chat-container .error .message-content {
+  background: #3b1f2a !important;
+  border-color: #6b1f3a !important;
+}
+
+/* Navigation active states */
+.nav-active {
+  background-color: var(--accent-primary) !important;
+  color: white !important;
+}
+
+/* Auto theme support */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-theme):not(.dark-theme) {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #9ca3af;
+    --border-primary: #374151;
+    --border-secondary: #4b5563;
+    --accent-primary: #3b82f6;
+    --accent-secondary: #60a5fa;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --sidebar-bg: #1f2937;
+    --card-bg: #1f2937;
+    --input-bg: #374151;
+    --shadow: rgba(0, 0, 0, 0.3);
+  }
+}

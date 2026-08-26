@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pm-dashboard
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: >-
+      cd pm-dashboard-fresh &&
+      npm install &&
+      cd frontend &&
+      npm install &&
+      npm run build &&
+      cd ../backend &&
+      npm install
+    startCommand: cd pm-dashboard-fresh/backend && NODE_ENV=production node server.js
+    healthCheckPath: /api/health
+    healthCheckTimeout: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
