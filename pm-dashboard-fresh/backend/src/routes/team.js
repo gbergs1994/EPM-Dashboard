@@ -87,7 +87,7 @@ router.get('/project-manager',
 
       const teamResult = await query(teamQuery, [projectManagerId]);
 
-      // Get unassigned team members
+      // Get unassigned/available team members (not yet assigned to this project manager)
       const unassignedQuery = `
         SELECT 
           u.id,
@@ -96,13 +96,16 @@ router.get('/project-manager',
           u.role,
           COALESCE(u.current_workload, 0) as current_workload,
           u.created_at,
-          0 as active_projects,
-          0 as career_goals
+          COUNT(DISTINCT CASE WHEN COALESCE(ptm.status, 'active') = 'active' THEN ptm.project_id END) as active_projects,
+          COUNT(DISTINCT CASE WHEN cdg.status = 'active' THEN cdg.id END) as career_goals
         FROM users u
-        LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.status = 'active'
-        WHERE u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer') 
+        LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
+        LEFT JOIN project_team_members ptm ON ptm.user_id = u.id
+        LEFT JOIN career_development_goals cdg ON cdg.user_id = u.id
+        WHERE u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer') 
           AND ta.team_member_id IS NULL
           AND u.id != $1
+        GROUP BY u.id, u.name, u.email, u.role, u.current_workload, u.created_at
         ORDER BY u.name
       `;
 
@@ -193,8 +196,8 @@ router.post('/assign',
 
           // Assign the team member
           const assignQuery = `
-            INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at)
-            VALUES ($1, $2, CURRENT_TIMESTAMP)
+            INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at, status)
+            VALUES ($1, $2, CURRENT_TIMESTAMP, 'active')
             ON CONFLICT (project_manager_id, team_member_id) 
             DO UPDATE SET 
               status = 'active',
@@ -203,6 +206,18 @@ router.post('/assign',
           `;
           
           await query(assignQuery, [projectManagerId, memberId]);
+
+          // Also keep team_members table in sync
+          try {
+            await query(`
+              INSERT INTO team_members (user_id, project_manager_id, added_by, notes, added_date, status)
+              VALUES ($1, $2, $3, '', CURRENT_TIMESTAMP, 'active')
+              ON CONFLICT (project_manager_id, user_id)
+              DO UPDATE SET status = 'active', updated_at = CURRENT_TIMESTAMP
+            `, [memberId, projectManagerId, projectManagerId]);
+          } catch (tmErr) {
+            console.warn('Sync to team_members note:', tmErr.message);
+          }
           
           results.push(verifyResult.rows[0]);
           assignmentCount++;
@@ -296,6 +311,17 @@ router.post('/remove',
             RETURNING *
           `;
           await query(unassignQuery, [projectManagerId, memberId]);
+
+          // Also keep team_members table in sync
+          try {
+            await query(`
+              UPDATE team_members
+              SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+              WHERE project_manager_id = $1 AND user_id = $2
+            `, [projectManagerId, memberId]);
+          } catch (tmErr) {
+            console.warn('Sync to team_members note:', tmErr.message);
+          }
 
           // Cascade: remove team member from all projects owned by this PM
           await query(

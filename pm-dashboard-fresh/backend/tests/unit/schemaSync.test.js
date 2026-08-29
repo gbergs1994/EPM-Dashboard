@@ -9,8 +9,19 @@ if (process.env.NODE_ENV === 'production') {
   describe('schema synchronization', () => {
     it('ensures schema.sql includes all migration tables', () => {
       const schemaPath = path.join(__dirname, '../../database/schema.sql');
-      // run the helper script; init-db wipes and rebuilds the sqlite file from schema.sql
-      execSync('node init-db.js', { cwd: path.join(__dirname, '../../') });
+      const testDbPath = path.join(__dirname, '../../database/test_schemasync.db');
+      try {
+        if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+      } catch (e) {}
+
+      // run the helper script against a dedicated test database
+      execSync('node init-db.js', { 
+        cwd: path.join(__dirname, '../../'),
+        env: { ...process.env, DB_PATH: testDbPath, NODE_ENV: 'test', FORCE_RESET: 'true' }
+      });
+      try {
+        if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+      } catch (e) {}
       const content = fs.readFileSync(schemaPath, 'utf8');
       expect(content).toMatch(/leadership_assessments/);
       expect(content).toMatch(/CREATE TABLE IF NOT EXISTS users/);

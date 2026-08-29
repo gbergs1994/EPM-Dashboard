@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Use SQLite for development (much simpler than PostgreSQL setup)
-const dbPath = path.join(__dirname, '../../database/dev.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database/dev.db');
 const schemaPath = path.join(__dirname, '../../database/schema.sql');
 
 // Ensure the database directory exists before sqlite3 tries to create the file

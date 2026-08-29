@@ -250,8 +250,21 @@ const ProjectTeamSection = ({
     setSearchLoading(true);
     
     try {
-      // Use project manager team if available, otherwise use all users
-      let availableUsers = projectManagerTeam.length > 0 ? projectManagerTeam : allUsers;
+      // Combine PM team and all users to ensure any team member can be found and added
+      const userMap = new Map();
+      allUsers.forEach(u => {
+        if (u && u.id) userMap.set(u.id, u);
+      });
+      projectManagerTeam.forEach(u => {
+        if (u && u.id) {
+          const existing = userMap.get(u.id) || {};
+          userMap.set(u.id, { ...existing, ...u });
+        }
+      });
+      let availableUsers = Array.from(userMap.values());
+      if (availableUsers.length === 0) {
+        availableUsers = projectManagerTeam.length > 0 ? projectManagerTeam : allUsers;
+      }
 
       const filtered = availableUsers.filter(user => {
         const matchesQuery = !query.trim() || query.length < 2 ||

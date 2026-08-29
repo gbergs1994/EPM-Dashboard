@@ -4,8 +4,7 @@ const { query } = require('../config/database');
 
 const router = express.Router();
 
-
-console.log('ðŸ” Auth routes file loaded successfully');
+console.log('🔍 Auth routes file loaded successfully');
 
 // delegate to the controller implementations which include proper hashing and
 // consistent error handling.  previously the routes file redefined the logic,
@@ -17,16 +16,16 @@ const {
   logout
 } = require('../controllers/authController');
 
-console.log('ðŸ”— Setting up auth routes...');
+console.log('🔗 Setting up auth routes...');
 
 router.post('/register', asyncHandler(register));
-console.log('âœ… POST /register route configured');
+console.log('✅ POST /register route configured');
 
 router.post('/login', asyncHandler(login));
-console.log('âœ… POST /login route configured');
+console.log('✅ POST /login route configured');
 
 router.post('/logout', asyncHandler(logout));
-console.log('âœ… POST /logout route configured');
+console.log('✅ POST /logout route configured');
 
 router.get('/me', (req, res) => {
   res.status(501).json({ 
@@ -50,8 +49,6 @@ router.get('/test', (req, res) => {
   });
 });
 
-
-
-console.log('âœ… Auth routes setup complete');
+console.log('✅ Auth routes setup complete');
 
 module.exports = router;

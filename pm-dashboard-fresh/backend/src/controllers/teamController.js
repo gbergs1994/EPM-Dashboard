@@ -313,17 +313,17 @@ const getAvailableTeamMembers = async (req, res) => {
   try {
     const projectManagerId = req.user.id;
 
-    // Get users who are not already in any team
+    // Get users who are not already in this project manager's team
     const availableUsersQuery = `
       SELECT u.id, u.name, u.email, u.role, u.created_at,
              COUNT(DISTINCT p.id) as project_count
       FROM users u
-      LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.status = 'active'
+      LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.project_manager_id = $1 AND tm.status = 'active'
       LEFT JOIN project_team_members ptm ON u.id = ptm.user_id
       LEFT JOIN projects p ON ptm.project_id = p.id
       WHERE tm.user_id IS NULL 
         AND u.id != $1 
-        AND u.role = 'Team Member'
+        AND u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')
       GROUP BY u.id, u.name, u.email, u.role, u.created_at
       ORDER BY u.name
     `;
@@ -343,7 +343,7 @@ const getAvailableTeamMembers = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting available users:', error);
+    console.error('❌ Error getting available users:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get available users'
@@ -364,29 +364,31 @@ const addProjectManagerTeamMember = async (req, res) => {
       });
     }
 
-    // Check if user exists and is a team member
+    // Check if user exists and is an eligible team member
     const userCheck = await query(
-      'SELECT id, name, email, role FROM users WHERE id = $1 AND role = $2',
-      [userId, 'Team Member']
+      `SELECT id, name, email, role FROM users 
+       WHERE id = $1 
+         AND role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')`,
+      [userId]
     );
 
     if (userCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'User not found or not a team member'
+        error: 'User not found or not an eligible team member'
       });
     }
 
-    // Check if user is already in a team
+    // Check if user is already in this project manager's team
     const existingTeamCheck = await query(
-      'SELECT project_manager_id FROM team_members WHERE user_id = $1 AND status = $2',
-      [userId, 'active']
+      'SELECT id FROM team_members WHERE user_id = $1 AND project_manager_id = $2 AND status = $3',
+      [userId, projectManagerId, 'active']
     );
 
     if (existingTeamCheck.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'User is already assigned to a team'
+        error: 'User is already assigned to your team'
       });
     }
 
@@ -394,14 +396,28 @@ const addProjectManagerTeamMember = async (req, res) => {
     const addQuery = `
       INSERT INTO team_members (user_id, project_manager_id, added_by, notes, added_date, status)
       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'active')
+      ON CONFLICT (project_manager_id, user_id)
+      DO UPDATE SET status = 'active', notes = $4, updated_at = CURRENT_TIMESTAMP
       RETURNING id
     `;
 
     await query(addQuery, [userId, projectManagerId, projectManagerId, notes || '']);
 
+    // Also sync to team_assignments
+    try {
+      await query(`
+        INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at, status)
+        VALUES ($1, $2, CURRENT_TIMESTAMP, 'active')
+        ON CONFLICT (project_manager_id, team_member_id)
+        DO UPDATE SET status = 'active', assigned_at = CURRENT_TIMESTAMP
+      `, [projectManagerId, userId]);
+    } catch (taErr) {
+      console.warn('Sync to team_assignments note:', taErr.message);
+    }
+
     const user = userCheck.rows[0];
 
-    console.log(`âœ… Added ${user.name} to project manager team of ${projectManagerId}`);
+    console.log(`✅ Added ${user.name} to project manager team of ${projectManagerId}`);
 
     res.json({
       success: true,
@@ -415,7 +431,7 @@ const addProjectManagerTeamMember = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error adding project manager team member:', error);
+    console.error('❌ Error adding project manager team member:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to add team member'
@@ -460,6 +476,17 @@ const removeProjectManagerTeamMember = async (req, res) => {
     `;
 
     await query(removeQuery, [userId, projectManagerId]);
+
+    // Also update team_assignments
+    try {
+      await query(`
+        UPDATE team_assignments 
+        SET status = 'inactive', assigned_at = CURRENT_TIMESTAMP
+        WHERE project_manager_id = $1 AND team_member_id = $2
+      `, [projectManagerId, userId]);
+    } catch (taErr) {
+      console.warn('Sync to team_assignments note:', taErr.message);
+    }
 
     const userName = teamMemberCheck.rows[0].name;
 

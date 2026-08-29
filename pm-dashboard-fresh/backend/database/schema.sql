@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS team_members (
     status TEXT DEFAULT 'active',
     notes TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id)
+    UNIQUE(project_manager_id, user_id)
 );
 
 -- PM-to-team-member assignments (used by /api/team routes)
@@ -261,14 +261,16 @@ CREATE TABLE IF NOT EXISTS user_skills (
     UNIQUE(user_id, skill_name)
 );
 
--- Insert sample data
-INSERT OR IGNORE INTO users (name, email, role, avatar) VALUES
-('John Doe', 'john.doe@company.com', 'Project Manager', 'JD'),
-('Jane Smith', 'jane.smith@company.com', 'Frontend Developer', 'JS'),
-('Mike Johnson', 'mike.johnson@company.com', 'Backend Developer', 'MJ'),
-('Alice Chen', 'alice.chen@company.com', 'UX Designer', 'AC'),
-('Sarah Johnson', 'sarah.johnson@company.com', 'Product Manager', 'SJ'),
-('Current User', 'user@company.com', 'Project Manager', 'CU');
+-- Insert sample data (default password for demo users: password123, GunnyRittz: Password123!)
+INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
+('Gunny Rittz', 'GunnyRittz@gmail.com', '$2a$10$E.Cf/G/Yjs.kBbYcLBicZO9DLlmVcdSa2v4xF75Se3v4hmbrAxBHC', 'Executive Leader', 'GR'),
+('TestAdmin', 'admin123@localhost.local', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Executive Leader', 'TA'),
+('John Doe', 'john.doe@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager', 'JD'),
+('Jane Smith', 'jane.smith@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Frontend Developer', 'JS'),
+('Mike Johnson', 'mike.johnson@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Backend Developer', 'MJ'),
+('Alice Chen', 'alice.chen@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'UX Designer', 'AC'),
+('Sarah Johnson', 'sarah.johnson@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Product Manager', 'SJ'),
+('Current User', 'user@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager', 'CU');
 
 INSERT OR IGNORE INTO projects (name, description, status, priority, deadline, pm_progress, leadership_progress, change_mgmt_progress, career_dev_progress, created_by) VALUES
 ('Website Redesign', 'Complete overhaul of company website', 'active', 'high', '2025-03-15', 7, 6, 7, 2, 1),

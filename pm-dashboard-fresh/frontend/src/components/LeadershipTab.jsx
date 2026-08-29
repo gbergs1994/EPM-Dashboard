@@ -323,7 +323,7 @@ const LeadershipTab = ({ currentUser, onDataChange }) => {
       setSubmitting(true);
       
       const assessmentData = {
-        project_id: selectedProjectForAssessment || null,
+        project_id: selectedProjectForAssessment,
         type: 'leadership_diamond',
         responses: responses
       };
@@ -403,7 +403,7 @@ const LeadershipTab = ({ currentUser, onDataChange }) => {
 
   // Check if all dimensions are complete
   const isAssessmentComplete = () => {
-    return dimensions.every(dim => isDimensionComplete(dim));
+    return Boolean(selectedProjectForAssessment) && dimensions.every(dim => isDimensionComplete(dim));
   };
 
   // Render slider component
@@ -1166,7 +1166,7 @@ const LeadershipTab = ({ currentUser, onDataChange }) => {
                   color: '#111827',
                   marginBottom: '1rem'
                 }}>
-                  Select a project (optional) - {projects.length} available
+                  Select a project - {projects.length} available
                 </h4>
                 <select
                   value={selectedProjectForAssessment}
@@ -1180,7 +1180,7 @@ const LeadershipTab = ({ currentUser, onDataChange }) => {
                     backgroundColor: 'white'
                   }}
                 >
-                  <option value="">General Leadership Assessment</option>
+                  <option value="">Select a project</option>
                   {projects.map(project => (
                     <option key={project.id} value={project.id}>
                       {project.name || project.title}
@@ -1195,7 +1195,7 @@ const LeadershipTab = ({ currentUser, onDataChange }) => {
                     marginTop: '0.5rem',
                     fontStyle: 'italic'
                   }}>
-                    No projects available. This assessment will be general (not project-specific).
+                    No projects are available. Create a project before completing this assessment.
                   </p>
                 )}
               </div>

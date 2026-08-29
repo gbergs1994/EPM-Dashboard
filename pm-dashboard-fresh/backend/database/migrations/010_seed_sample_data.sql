@@ -1,13 +1,13 @@
 -- Seed data migration: insert a few users and projects for local development
--- Default password for all seed users: password1234
+-- Default password for all seed users: password123
 
 INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
-('John Doe',      'john.doe@company.com',     '$2a$10$kaUDO05W8Wi9K.o7LGA5KOuAlWhgGm.nMQtELqigzsRdNUfEAmvRW', 'Project Manager',     'JD'),
-('Jane Smith',    'jane.smith@company.com',   '$2a$10$Xjc255Ak90xouHcjkE82i.jlB.OnSFxaiXBhBmiK7UInORKNKKsmi', 'Frontend Developer',  'JS'),
-('Mike Johnson',  'mike.johnson@company.com', '$2a$10$gTnA.RpZfP4XHscW0RXp9O.ETvjFwX0ck/PVBqjsDAWJDHgoMu0WS', 'Backend Developer',   'MJ'),
-('Alice Chen',    'alice.chen@company.com',   '$2a$10$uFTu2ti.fmmEvqh2J86.iOrwS1yPzUPMZuAegkMiTp3KcHlEPOnJ6', 'UX Designer',         'AC'),
-('Sarah Johnson', 'sarah.johnson@company.com','$2a$10$ZzRmHWsMWSrHUJm40jiPv.84VtFTPD2V4FmeieV5P5kCQB1aMQ/BW', 'Product Manager',     'SJ'),
-('Current User',  'user@company.com',         '$2a$10$CwAQovziKys3qQGonZfdg.9JjFmLGr4rZPU0clLKULX6BLmDUZ/Ce', 'Project Manager',     'CU');
+('John Doe',      'john.doe@company.com',     '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager',     'JD'),
+('Jane Smith',    'jane.smith@company.com',   '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Frontend Developer',  'JS'),
+('Mike Johnson',  'mike.johnson@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Backend Developer',   'MJ'),
+('Alice Chen',    'alice.chen@company.com',   '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'UX Designer',         'AC'),
+('Sarah Johnson', 'sarah.johnson@company.com','$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Product Manager',     'SJ'),
+('Current User',  'user@company.com',         '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager',     'CU');
 
 INSERT OR IGNORE INTO projects (
 	name,

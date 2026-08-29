@@ -665,7 +665,6 @@ const HistoryModal = ({ isOpen, onClose, assessments, projects, framework, onAss
               }}
             >
               <option value="all">All Projects</option>
-              <option value="null">General Assessments</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
                   {project.name}

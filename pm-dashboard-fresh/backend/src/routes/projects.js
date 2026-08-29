@@ -188,15 +188,33 @@ router.post('/:id/team', auth, async (req, res) => {
            ta.id IS NOT NULL
            OR tm.id IS NOT NULL
            OR u.project_manager_id = p.created_by
+           OR p.created_by = $2
          )`,
       [projectId, memberId]
     );
 
     if (assignmentCheck.rows.length === 0) {
-      return res.status(403).json({
-        success: false,
-        error: 'User is not assigned to this project manager. Assign them in Team Management first, then try again.'
-      });
+      // Auto-assign the user to this project manager's team
+      const projectOwnerResult = await query('SELECT created_by FROM projects WHERE id = $1', [projectId]);
+      const projectOwnerId = projectOwnerResult.rows[0]?.created_by || req.user.id;
+
+      try {
+        await query(`
+          INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at, status)
+          VALUES ($1, $2, CURRENT_TIMESTAMP, 'active')
+          ON CONFLICT (project_manager_id, team_member_id)
+          DO UPDATE SET status = 'active', assigned_at = CURRENT_TIMESTAMP
+        `, [projectOwnerId, memberId]);
+
+        await query(`
+          INSERT INTO team_members (user_id, project_manager_id, added_by, notes, added_date, status)
+          VALUES ($1, $2, $3, '', CURRENT_TIMESTAMP, 'active')
+          ON CONFLICT (project_manager_id, user_id)
+          DO UPDATE SET status = 'active', updated_at = CURRENT_TIMESTAMP
+        `, [memberId, projectOwnerId, req.user.id]);
+      } catch (assignErr) {
+        console.warn('Auto-assignment to PM team note:', assignErr.message);
+      }
     }
 
     // Add member with workload allocation stored in contribution_percentage

@@ -86,7 +86,7 @@ describe('authController', () => {
     });
 
     it('should register user with Project Manager role when specified', async () => {
-      const userDataWithRole = { ...validUserData, role: 'Project Manager' };
+      const userDataWithRole = { ...validUserData, name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Project Manager' };
       const newUser = {
         id: 2,
         name: 'Jane Smith',
@@ -203,7 +203,7 @@ describe('authController', () => {
       await authController.login(req, res);
 
       expect(query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT id, name, email, password, role, avatar, created_at FROM users'),
+        expect.stringMatching(/SELECT\s+id,\s*name,\s*email,\s*password,\s*role,\s*avatar,\s*created_at\s+FROM\s+users/i),
         ['john.doe@example.com']
       );
       expect(bcrypt.compare).toHaveBeenCalledWith('password123', '$2a$10$hashedPassword');

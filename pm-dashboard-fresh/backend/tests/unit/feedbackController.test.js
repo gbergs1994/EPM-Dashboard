@@ -13,15 +13,19 @@ const mockRes = () => {
 let dbModule;
 let feedbackController;
 
-beforeAll(() => {
-  const devPath = path.join(__dirname, '../../database/dev.db');
-  try {
-    if (fs.existsSync(devPath)) fs.unlinkSync(devPath);
-  } catch (e) {
-    // ignore busy/file-in-use errors
-  }
+const testDbPath = path.join(__dirname, '../../database/test_feedback.db');
+process.env.DB_PATH = testDbPath;
+process.env.NODE_ENV = 'test';
 
-  execSync('node init-db.js', { cwd: path.join(__dirname, '../../') });
+beforeAll(() => {
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+  } catch (e) {}
+
+  execSync('node init-db.js', { 
+    cwd: path.join(__dirname, '../../'),
+    env: { ...process.env, DB_PATH: testDbPath, NODE_ENV: 'test', FORCE_RESET: 'true' }
+  });
   dbModule = require('../../src/config/database');
   feedbackController = require('../../src/controllers/feedbackController');
 });
@@ -29,9 +33,10 @@ beforeAll(() => {
 afterAll(() => {
   try {
     if (dbModule && dbModule.db) dbModule.db.close();
-  } catch (e) {
-    // ignore close errors in tests
-  }
+  } catch (e) {}
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+  } catch (e) {}
 });
 
 describe('feedbackController.submitFeedback', () => {

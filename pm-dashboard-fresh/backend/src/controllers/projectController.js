@@ -103,8 +103,11 @@ const getAllProjects = async (req, res) => {
           WHERE ptm2.user_id = $${queryParams.length + 1}
         )
         OR p.created_by IN (
-          SELECT id FROM users 
-          WHERE project_manager_id = $${queryParams.length + 1}
+          SELECT team_member_id FROM team_assignments WHERE project_manager_id = $${queryParams.length + 1} AND status = 'active'
+          UNION
+          SELECT user_id FROM team_members WHERE project_manager_id = $${queryParams.length + 1} AND status = 'active'
+          UNION
+          SELECT id FROM users WHERE project_manager_id = $${queryParams.length + 1}
         )
         OR p.created_by = $${queryParams.length + 1}
       )`);
@@ -1798,7 +1801,9 @@ const getProjectManagerProjectsDashboard = async (req, res) => {
       FROM projects p
       INNER JOIN users u ON p.created_by = u.id
       LEFT JOIN project_team_members ptm ON p.id = ptm.project_id
-      WHERE u.project_manager_id = $1
+      LEFT JOIN team_assignments ta ON ta.team_member_id = u.id AND ta.project_manager_id = $1 AND ta.status = 'active'
+      LEFT JOIN team_members tm ON tm.user_id = u.id AND tm.project_manager_id = $1 AND tm.status = 'active'
+      WHERE u.project_manager_id = $1 OR ta.team_member_id IS NOT NULL OR tm.user_id IS NOT NULL
       GROUP BY p.id, u.name
       ORDER BY p.updated_at DESC
     `;

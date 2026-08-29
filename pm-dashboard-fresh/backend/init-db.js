@@ -3,26 +3,29 @@ const path = require('path');
 const fs = require('fs');
 
 // Database setup
-const dbPath = path.join(__dirname, 'database/dev.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'database/dev.db');
 const schemaPath = path.join(__dirname, 'database/schema.sql');
 
-// remove the old dev database so we always start with a clean copy; this
-// ensures running `init-db.js` multiple times won't generate confusing
-// "table has more than one primary key" errors.
+// Only allow dropping/unlinking database file if explicitly instructed via FORCE_RESET=true or in test environments.
+// During normal operation, table definitions use CREATE TABLE IF NOT EXISTS and INSERT OR IGNORE,
+// preserving all existing user accounts and data.
 function removeDb(attempts = 3) {
+  if (process.env.FORCE_RESET !== 'true' && process.env.NODE_ENV !== 'test') {
+    return;
+  }
   if (!fs.existsSync(dbPath)) return;
   try {
     fs.unlinkSync(dbPath);
-    console.log('🗑️  Removed existing dev.db');
+    console.log('🗑️  Removed existing database file');
   } catch (err) {
     if (attempts > 0 && err.code === 'EBUSY') {
-      console.warn(`⚠️  dev.db busy, retrying (${attempts} attempts left)`);
+      console.warn(`⚠️  database file busy, retrying (${attempts} attempts left)`);
       // small delay then retry synchronously
       const waitTill = Date.now() + 50;
       while (Date.now() < waitTill) {} // busy-wait, acceptable for very short delay
       return removeDb(attempts - 1);
     }
-    console.warn('⚠️  Could not remove dev.db, it may be in use - will continue with existing file');
+    console.warn('⚠️  Could not remove database file, it may be in use - will continue with existing file');
   }
 }
 removeDb();

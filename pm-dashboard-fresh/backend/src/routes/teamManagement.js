@@ -68,8 +68,8 @@ router.post('/assign', requireAuth, requireProjectManager, async (req, res) => {
     for (const memberId of memberIds) {
       try {
         const assignQuery = `
-          INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at)
-          VALUES ($1, $2, CURRENT_TIMESTAMP)
+          INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at, status)
+          VALUES ($1, $2, CURRENT_TIMESTAMP, 'active')
           ON CONFLICT (project_manager_id, team_member_id)
           DO UPDATE SET
             status = 'active',
@@ -78,6 +78,19 @@ router.post('/assign', requireAuth, requireProjectManager, async (req, res) => {
         `;
 
         await query(assignQuery, [projectManagerId, memberId]);
+
+        // Also keep team_members in sync
+        try {
+          await query(`
+            INSERT INTO team_members (user_id, project_manager_id, added_by, notes, added_date, status)
+            VALUES ($1, $2, $3, '', CURRENT_TIMESTAMP, 'active')
+            ON CONFLICT (project_manager_id, user_id)
+            DO UPDATE SET status = 'active', updated_at = CURRENT_TIMESTAMP
+          `, [memberId, projectManagerId, projectManagerId]);
+        } catch (tmErr) {
+          console.warn('Sync to team_members note:', tmErr.message);
+        }
+
         assignmentCount++;
       } catch (assignError) {
         console.warn(`⚠️ Failed to assign member ${memberId}:`, assignError.message);
@@ -169,6 +182,17 @@ router.post('/remove', requireAuth, requireProjectManager, async (req, res) => {
     `;
     await query(removeQuery, [projectManagerId, ...memberIds]);
 
+    // Also update team_members table
+    try {
+      await query(`
+        UPDATE team_members
+        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+        WHERE project_manager_id = $1 AND user_id IN (${placeholders})
+      `, [projectManagerId, ...memberIds]);
+    } catch (tmErr) {
+      console.warn('Sync to team_members note:', tmErr.message);
+    }
+
     // Remove project manager from projects created by removed team members
     const projectRemoveQuery = `
       DELETE FROM project_team_members
@@ -229,6 +253,29 @@ router.get('/project-manager', requireAuth, requireProjectManager, async (req, r
     `;
     const teamResult = await query(teamQuery, [projectManagerId]);
 
+    // Get unassigned/available team members (not yet assigned to this project manager)
+    const unassignedQuery = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.role,
+        COALESCE(u.current_workload, 0) as current_workload,
+        u.created_at,
+        COUNT(DISTINCT CASE WHEN COALESCE(ptm.status, 'active') = 'active' THEN ptm.project_id END) as active_projects,
+        COUNT(DISTINCT CASE WHEN cdg.status = 'active' THEN cdg.id END) as career_goals
+      FROM users u
+      LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
+      LEFT JOIN project_team_members ptm ON ptm.user_id = u.id
+      LEFT JOIN career_development_goals cdg ON cdg.user_id = u.id
+      WHERE u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer') 
+        AND ta.team_member_id IS NULL
+        AND u.id != $1
+      GROUP BY u.id, u.name, u.email, u.role, u.current_workload, u.created_at
+      ORDER BY u.name
+    `;
+    const unassignedResult = await query(unassignedQuery, [projectManagerId]);
+
     // Get team statistics
     const statsQuery = `
       SELECT
@@ -242,16 +289,29 @@ router.get('/project-manager', requireAuth, requireProjectManager, async (req, r
     `;
     const statsResult = await query(statsQuery, [projectManagerId]);
 
+    const formattedMembers = teamResult.rows.map((member) => ({
+      ...member,
+      current_workload: parseInt(member.current_workload, 10) || 0,
+      active_projects: parseInt(member.active_projects, 10) || 0,
+      career_goals: parseInt(member.career_goals, 10) || 0,
+      projectCount: parseInt(member.active_projects, 10) || 0
+    }));
+
+    const formattedUnassigned = unassignedResult.rows.map((member) => ({
+      ...member,
+      current_workload: parseInt(member.current_workload, 10) || 0,
+      active_projects: parseInt(member.active_projects, 10) || 0,
+      career_goals: parseInt(member.career_goals, 10) || 0,
+      projectCount: parseInt(member.active_projects, 10) || 0
+    }));
+
     res.json({
       success: true,
       data: {
-        members: teamResult.rows.map((member) => ({
-          ...member,
-          current_workload: parseInt(member.current_workload, 10) || 0,
-          active_projects: parseInt(member.active_projects, 10) || 0,
-          career_goals: parseInt(member.career_goals, 10) || 0,
-          projectCount: parseInt(member.active_projects, 10) || 0
-        })),
+        members: formattedMembers,
+        teamMembers: formattedMembers,
+        unassignedMembers: formattedUnassigned,
+        totalTeamSize: formattedMembers.length,
         stats: statsResult.rows[0] || { total_members: 0, leaders: 0, developers: 0, analysts: 0 }
       }
     });

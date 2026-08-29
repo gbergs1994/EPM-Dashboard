@@ -68,6 +68,29 @@ const ProjectMilestonesSection = ({ projectId, currentUser }) => {
     return numeric.toFixed(2);
   };
 
+  const getDateProgress = (milestone) => {
+    if (!milestone?.start_date || !milestone?.end_date) return null;
+
+    const toUtcDate = (value) => {
+      const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+    const startDate = toUtcDate(milestone.start_date);
+    const endDate = toUtcDate(milestone.end_date);
+    if (!startDate || !endDate || endDate <= startDate) return null;
+
+    const now = new Date();
+    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const durationDays = (endDate.getTime() - startDate.getTime()) / 86400000;
+    const elapsedDays = (today - startDate.getTime()) / 86400000;
+    const expectedCompletion = Math.min(100, Math.max(0, (elapsedDays / durationDays) * 100));
+
+    return {
+      actualCompletion: Number(milestone.completion_percentage) || 0,
+      expectedCompletion
+    };
+  };
+
   const orderedMilestones = [...milestones].sort((a, b) => {
     const orderDiff = (Number(a.order_index) || 0) - (Number(b.order_index) || 0);
     if (orderDiff !== 0) return orderDiff;
@@ -118,6 +141,32 @@ const ProjectMilestonesSection = ({ projectId, currentUser }) => {
   const currentMilestoneName = hasApiCurrentMilestone
     ? (metrics?.current_milestone_title || 'No current milestone')
     : (fallbackCurrentMilestone?.title || 'No current milestone');
+  const currentMilestone = hasApiCurrentMilestone
+    ? milestones.find((milestone) => Number(milestone.id) === currentMilestoneId)
+    : fallbackCurrentMilestone;
+  const completionRateMilestones = isCurrentMode ? [currentMilestone] : milestones;
+  const completionRateProgress = completionRateMilestones
+    .map(getDateProgress)
+    .filter(Boolean);
+  const completionRate = completionRateProgress.length > 0
+    ? {
+      actual: completionRateProgress.reduce((total, progress) => total + progress.actualCompletion, 0) / completionRateProgress.length,
+      expected: completionRateProgress.reduce((total, progress) => total + progress.expectedCompletion, 0) / completionRateProgress.length
+    }
+    : null;
+  const completionRateVariance = completionRate
+    ? completionRate.actual - completionRate.expected
+    : 0;
+  const completionRateStatus = !completionRate
+    ? 'Schedule unavailable'
+    : Math.abs(completionRateVariance) < 0.5
+      ? 'On schedule'
+      : completionRateVariance > 0
+        ? 'Ahead of schedule'
+        : 'Behind schedule';
+  const completionRateColor = !completionRate || Math.abs(completionRateVariance) < 0.5
+    ? '#475569'
+    : completionRateVariance > 0 ? '#15803d' : '#dc2626';
 
   if (loading) {
     return (
@@ -417,6 +466,40 @@ const ProjectMilestonesSection = ({ projectId, currentUser }) => {
               color: '#111827'
             }}>
               {activeCompletion.toFixed(3)}%
+            </p>
+          </div>
+
+          <div style={{
+            padding: '1rem',
+            backgroundColor: '#f0fdfa',
+            borderRadius: '0.75rem',
+            border: '1px solid #99f6e4'
+          }}>
+            <p style={{
+              margin: '0 0 0.5rem 0',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              color: '#0f766e',
+              textTransform: 'uppercase'
+            }}>
+              Rate of Completion
+            </p>
+            <p style={{
+              margin: 0,
+              fontSize: '1.5rem',
+              fontWeight: '700',
+              color: completionRateColor
+            }}>
+              {completionRateStatus}
+            </p>
+            <p style={{
+              margin: '0.25rem 0 0 0',
+              fontSize: '0.75rem',
+              color: '#475569'
+            }}>
+              {completionRate
+                ? `${completionRate.actual.toFixed(1)}% actual vs ${completionRate.expected.toFixed(1)}% expected`
+                : 'Add a valid start and end date'}
             </p>
           </div>
           </div>

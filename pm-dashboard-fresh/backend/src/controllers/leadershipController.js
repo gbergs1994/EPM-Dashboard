@@ -107,12 +107,22 @@ const submitLeadershipAssessment = async (req, res) => {
     console.log(`📝 Submitting leadership assessment for user ${userId}`);
     console.log('Assessment data:', { project_id, assessment_type: atype, responses });
 
+    const projectId = Number(project_id);
+
     // Validate required fields
     if (!atype || !responses) {
       return res.status(400).json({
         success: false,
         message: 'Assessment type and responses are required',
         error: 'Assessment type and responses are required'
+      });
+    }
+
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid project is required for leadership assessments',
+        error: 'A valid project is required for leadership assessments'
       });
     }
 
@@ -166,7 +176,7 @@ const submitLeadershipAssessment = async (req, res) => {
 
     const insertParams = [
       userId,
-      project_id || null,
+      projectId,
       atype,
       JSON.stringify(responses),
       scores.vision_score,
@@ -194,7 +204,7 @@ const submitLeadershipAssessment = async (req, res) => {
       assessment: {
         id: newAssessment.id,
         user_id: userId,
-        project_id: project_id || null,
+        project_id: projectId,
         assessment_type: atype,
         responses,
         scores,

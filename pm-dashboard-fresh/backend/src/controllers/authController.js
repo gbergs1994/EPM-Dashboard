@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs'); // Make sure you have this installed
 // Add this missing register function!
 const register = async (req, res) => {
   try {
-    console.log('ðŸ” Registration attempt for:', req.body.email);
+    console.log('🔑 Registration attempt for:', req.body.email);
     const { name, email, password, role } = req.body;
     
     // Validate required fields
@@ -53,7 +53,7 @@ const register = async (req, res) => {
     
     const newUser = result.rows[0];
     
-    console.log('âœ… Registration successful for:', newUser.name, 'as', newUser.role);
+    console.log('✅ Registration successful for:', newUser.name, 'as', newUser.role);
     
     res.status(201).json({
       success: true,
@@ -69,7 +69,7 @@ const register = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('âŒ Registration error:', error);
+    console.error('❌ Registration error:', error);
     res.status(500).json({
       success: false,
       error: 'Registration failed'
@@ -79,7 +79,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    console.log('ðŸ” Login attempt for:', req.body.email);
+    console.log('🔑 Login attempt for:', req.body.email);
     const { email, password } = req.body;
     
     // Validate required fields
@@ -139,7 +139,7 @@ const login = async (req, res) => {
       created_at: user.created_at
     };
     
-    console.log('âœ… Login successful for:', userData.name, 'Role:', userData.role);
+    console.log('✅ Login successful for:', userData.name, 'Role:', userData.role);
     
     res.json({
       success: true,
@@ -148,7 +148,7 @@ const login = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('âŒ Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({
       success: false,
       error: 'Login failed'
@@ -157,7 +157,7 @@ const login = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  console.log('ðŸ‘‹ Logout request received');
+  console.log('👋 Logout request received');
   
   res.json({
     success: true,

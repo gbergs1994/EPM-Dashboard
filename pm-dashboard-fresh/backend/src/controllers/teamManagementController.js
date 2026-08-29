@@ -3,7 +3,7 @@ const { ApiError } = require('../middleware/errorHandler');
 
 class TeamManagementController {
   // Get project manager's team members
-  getProjectManagerTeam = async (req, res) => {
+  async getProjectManagerTeam(req, res) {
     try {
       const projectManagerId = req.user?.id || 1; // Use authenticated user ID
       
@@ -11,24 +11,28 @@ class TeamManagementController {
       
       // Get team members assigned to this project manager
       const teamMembersQuery = `
-        SELECT id, name, email, role, created_at, updated_at,
-               project_manager_id
-        FROM users 
-        WHERE project_manager_id = $1
-        ORDER BY name ASC
+        SELECT u.id, u.name, u.email, u.role, u.created_at, u.updated_at,
+               COALESCE(u.current_workload, 0) as current_workload,
+               ta.assigned_at, ta.status as assignment_status
+        FROM team_assignments ta
+        JOIN users u ON ta.team_member_id = u.id
+        WHERE ta.project_manager_id = $1 AND ta.status = 'active'
+        ORDER BY u.name ASC
       `;
       
       const teamMembersResult = await query(teamMembersQuery, [projectManagerId]);
       const teamMembers = teamMembersResult.rows;
       
-      // Get unassigned team members (no project manager assigned yet)
+      // Get available team members (not yet assigned to this project manager)
       const unassignedQuery = `
-        SELECT id, name, email, role, created_at, updated_at
-        FROM users 
-        WHERE project_manager_id IS NULL 
-          AND role IN ('Team Member', 'Manager')
-          AND id != $1
-        ORDER BY name ASC
+        SELECT u.id, u.name, u.email, u.role, u.created_at, u.updated_at,
+               COALESCE(u.current_workload, 0) as current_workload
+        FROM users u
+        LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
+        WHERE ta.team_member_id IS NULL 
+          AND u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')
+          AND u.id != $1
+        ORDER BY u.name ASC
       `;
       
       const unassignedResult = await query(unassignedQuery, [projectManagerId]);
@@ -57,6 +61,7 @@ class TeamManagementController {
       res.json({
         success: true,
         data: {
+          members: enhancedTeamMembers,
           teamMembers: enhancedTeamMembers,
           unassignedMembers,
           totalTeamSize: teamMembers.length
@@ -70,10 +75,10 @@ class TeamManagementController {
         message: 'Failed to get project manager team data'
       });
     }
-  };
+  }
 
   // Assign team members to project manager
-  assignTeamMembers = async (req, res) => {
+  async assignTeamMembers(req, res) {
     try {
       const projectManagerId = req.user?.id || 1;
       const { memberIds } = req.body;
@@ -91,50 +96,73 @@ class TeamManagementController {
       await query('BEGIN');
       
       try {
-        // Update users to assign them to this project manager
-        const updateQuery = `
-        UPDATE users 
-        SET project_manager_id = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ANY($2::int[]) 
-            AND role IN ('Team Member', 'Manager', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer')
-            AND (project_manager_id IS NULL OR project_manager_id != $1)
-        RETURNING id, name, email
-        `;
-        
-        const result = await query(updateQuery, [projectManagerId, memberIds]);
-        const assignedMembers = result.rows;
+        const assignedMembers = [];
+
+        for (const memberId of memberIds) {
+          // Verify user exists and is eligible
+          const verifyQuery = `
+            SELECT id, name, role, email
+            FROM users
+            WHERE id = $1
+              AND role IN ('Team Member', 'Manager', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')
+          `;
+          const verifyResult = await query(verifyQuery, [memberId]);
+
+          if (verifyResult.rows.length === 0) continue;
+
+          // Insert into team_assignments
+          const assignQuery = `
+            INSERT INTO team_assignments (project_manager_id, team_member_id, assigned_at, status)
+            VALUES ($1, $2, CURRENT_TIMESTAMP, 'active')
+            ON CONFLICT (project_manager_id, team_member_id)
+            DO UPDATE SET status = 'active', assigned_at = CURRENT_TIMESTAMP
+            RETURNING *
+          `;
+          await query(assignQuery, [projectManagerId, memberId]);
+
+          // Also keep team_members in sync
+          try {
+            await query(`
+              INSERT INTO team_members (user_id, project_manager_id, added_by, notes, added_date, status)
+              VALUES ($1, $2, $3, '', CURRENT_TIMESTAMP, 'active')
+              ON CONFLICT (project_manager_id, user_id)
+              DO UPDATE SET status = 'active', updated_at = CURRENT_TIMESTAMP
+            `, [memberId, projectManagerId, projectManagerId]);
+          } catch (tmErr) {
+            console.warn('Sync to team_members note:', tmErr.message);
+          }
+
+          assignedMembers.push(verifyResult.rows[0]);
+        }
         
         // Auto-assign project manager to existing projects by these team members
         if (assignedMembers.length > 0) {
-          const assignedMemberIds = assignedMembers.map(m => m.id);
-          
-          // Find projects created by newly assigned members
-          const projectsQuery = `
-            SELECT id, name, created_by
-            FROM projects 
-            WHERE created_by = ANY($1::int[])
-          `;
-          const projectsResult = await query(projectsQuery, [assignedMemberIds]);
-          
-          // Add project manager to each project's team if not already there
-          for (const project of projectsResult.rows) {
-            const addToTeamQuery = `
-              INSERT INTO project_team_members (project_id, user_id, role_in_project, contribution_percentage, tasks_completed, joined_date)
-              VALUES ($1, $2, $3, $4, $5, $6)
-              ON CONFLICT (project_id, user_id) DO NOTHING
+          for (const member of assignedMembers) {
+            const projectsQuery = `
+              SELECT id, name, created_by
+              FROM projects 
+              WHERE created_by = $1
             `;
+            const projectsResult = await query(projectsQuery, [member.id]);
             
-            await query(addToTeamQuery, [
-              project.id,
-              projectManagerId,
-              'Project Manager Oversight',
-              0,
-              0,
-              new Date().toISOString().split('T')[0]
-            ]);
+            // Add project manager to each project's team if not already there
+            for (const project of projectsResult.rows) {
+              const addToTeamQuery = `
+                INSERT INTO project_team_members (project_id, user_id, role_in_project, contribution_percentage, tasks_completed, joined_date)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (project_id, user_id) DO NOTHING
+              `;
+              
+              await query(addToTeamQuery, [
+                project.id,
+                projectManagerId,
+                'Project Manager Oversight',
+                0,
+                0,
+                new Date().toISOString().split('T')[0]
+              ]);
+            }
           }
-          
-          console.log(`Auto-assigned project manager to ${projectsResult.rows.length} existing projects`);
         }
         
         await query('COMMIT');
@@ -160,10 +188,10 @@ class TeamManagementController {
         message: 'Failed to assign team members'
       });
     }
-  };
+  }
 
   // Remove team members from project manager
-  removeTeamMembers = async (req, res) => {
+  async removeTeamMembers(req, res) {
     try {
       const projectManagerId = req.user?.id || 1;
       const { memberIds } = req.body;
@@ -180,31 +208,42 @@ class TeamManagementController {
       await query('BEGIN');
       
       try {
-        // Remove project manager assignment
-        const updateQuery = `
-          UPDATE users 
-          SET project_manager_id = NULL, updated_at = CURRENT_TIMESTAMP
-          WHERE id = ANY($1::int[]) 
-            AND project_manager_id = $2
-          RETURNING id, name, email
-        `;
-        
-        const result = await query(updateQuery, [memberIds, projectManagerId]);
-        const removedMembers = result.rows;
-        
-        // Remove project manager from projects they were auto-assigned to
-        if (removedMembers.length > 0) {
+        const removedMembers = [];
+
+        for (const memberId of memberIds) {
+          const updateQuery = `
+            UPDATE team_assignments 
+            SET status = 'inactive', assigned_at = CURRENT_TIMESTAMP
+            WHERE project_manager_id = $1 AND team_member_id = $2
+            RETURNING *
+          `;
+          const result = await query(updateQuery, [projectManagerId, memberId]);
+
+          // Also update team_members
+          try {
+            await query(`
+              UPDATE team_members
+              SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+              WHERE project_manager_id = $1 AND user_id = $2
+            `, [projectManagerId, memberId]);
+          } catch (tmErr) {
+            console.warn('Sync to team_members note:', tmErr.message);
+          }
+
+          if (result.rows.length > 0) {
+            removedMembers.push({ id: memberId });
+          }
+
+          // Remove project manager oversight from projects created by this member
           const removeFromProjectsQuery = `
             DELETE FROM project_team_members 
             WHERE user_id = $1 
               AND role_in_project = 'Project Manager Oversight'
               AND project_id IN (
-                SELECT id FROM projects WHERE created_by = ANY($2::int[])
+                SELECT id FROM projects WHERE created_by = $2
               )
           `;
-          
-          const deleteResult = await query(removeFromProjectsQuery, [projectManagerId, memberIds]);
-          console.log(`Removed project manager from ${deleteResult.rowCount} projects`);
+          await query(removeFromProjectsQuery, [projectManagerId, memberId]);
         }
         
         await query('COMMIT');
@@ -230,10 +269,10 @@ class TeamManagementController {
         message: 'Failed to remove team members'
       });
     }
-  };
+  }
 
   // Get project manager dashboard analytics
-  getProjectManagerDashboard = async (req, res) => {
+  async getProjectManagerDashboard(req, res) {
     try {
       const projectManagerId = req.user?.id || 1;
       
@@ -241,21 +280,23 @@ class TeamManagementController {
       
       // Get team member count
       const teamCountQuery = `
-        SELECT COUNT(*) as team_count
-        FROM users 
-        WHERE project_manager_id = $1
+        SELECT COUNT(DISTINCT team_member_id) as team_count
+        FROM team_assignments 
+        WHERE project_manager_id = $1 AND status = 'active'
       `;
       const teamCountResult = await query(teamCountQuery, [projectManagerId]);
       const teamSize = parseInt(teamCountResult.rows[0]?.team_count || 0);
       
       // Get team projects and their status
       const projectsQuery = `
-        SELECT p.id, p.name, p.status, p.priority, p.pm_progress,
+        SELECT DISTINCT p.id, p.name, p.status, p.priority, p.pm_progress,
                p.leadership_progress, p.change_mgmt_progress, p.career_dev_progress,
                p.created_at, p.updated_at, u.name as creator_name
         FROM projects p
         INNER JOIN users u ON p.created_by = u.id
-        WHERE u.project_manager_id = $1
+        LEFT JOIN team_assignments ta ON ta.team_member_id = u.id AND ta.project_manager_id = $1 AND ta.status = 'active'
+        LEFT JOIN project_team_members ptm ON ptm.project_id = p.id AND ptm.user_id = $1
+        WHERE p.created_by = $1 OR ta.team_member_id IS NOT NULL OR ptm.user_id IS NOT NULL
         ORDER BY p.updated_at DESC
       `;
       
@@ -319,7 +360,7 @@ class TeamManagementController {
         message: 'Failed to get project manager dashboard data'
       });
     }
-  };
+  }
 }
 
 module.exports = new TeamManagementController();

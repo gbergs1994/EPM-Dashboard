@@ -16,32 +16,34 @@ let submitOrganizationalChangeAssessment;
 let leadershipController;
 
 describe('assessment submission controllers', () => {
+  const testDbPath = path.join(__dirname, '../../database/test_assessment.db');
+  process.env.DB_PATH = testDbPath;
+  process.env.NODE_ENV = 'test';
+
   beforeAll(() => {
-    // close and remove any existing sqlite file so we can rebuild it cleanly
-    const devPath = path.join(__dirname, '../../database/dev.db');
     try {
-      // if a prior connection exists, try closing it
       if (dbModule && dbModule.db) dbModule.db.close();
     } catch (e) {}
     try {
-      if (fs.existsSync(devPath)) fs.unlinkSync(devPath);
-    } catch (e) {
-      // ignore EBUSY or other unlink errors during parallel tests
-    }
+      if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+    } catch (e) {}
 
-    // run the initializer which creates the schema from schema.sql
-    execSync('node init-db.js', { cwd: path.join(__dirname, '../../') });
+    execSync('node init-db.js', { 
+      cwd: path.join(__dirname, '../../'),
+      env: { ...process.env, DB_PATH: testDbPath, NODE_ENV: 'test', FORCE_RESET: 'true' }
+    });
 
-    // now import database and controllers with a fresh connection
     dbModule = require('../../src/config/database');
     ({ submitOrganizationalChangeAssessment } = require('../../src/controllers/organizationalChangeController'));
     leadershipController = require('../../src/controllers/leadershipController');
   });
 
   afterAll(() => {
-    // close the SQLite connection opened by database module
     try {
       if (dbModule && dbModule.db) dbModule.db.close();
+    } catch (e) {}
+    try {
+      if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
     } catch (e) {}
   });
   describe('organizationalChangeController.submitOrganizationalChangeAssessment', () => {
@@ -112,7 +114,7 @@ describe('assessment submission controllers', () => {
     it('rejects when a required dimension is blank', async () => {
       const req = mockReq({
         body: {
-          project_id: null,
+          project_id: 1,
           assessment_type: 'leadership_diamond',
           responses: {
             vision: { q1: 1 },
@@ -133,7 +135,7 @@ describe('assessment submission controllers', () => {
       );
     });
 
-    it('creates a leadership assessment successfully', async () => {
+    it('rejects a leadership assessment without a project', async () => {
       const req = mockReq({
         body: {
           project_id: null,
@@ -148,20 +150,44 @@ describe('assessment submission controllers', () => {
       });
       const res = mockRes();
       await leadershipController.submitLeadershipAssessment(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          message: 'A valid project is required for leadership assessments'
+        })
+      );
+    });
+
+    it('creates a project-scoped leadership assessment successfully', async () => {
+      const req = mockReq({
+        body: {
+          project_id: 1,
+          assessment_type: 'leadership_diamond',
+          responses: {
+            vision: { q1: 5 },
+            reality: { q1: 6 },
+            ethics: { q1: 7 },
+            courage: { q1: 8 }
+          }
+        }
+      });
+      const res = mockRes();
+      await leadershipController.submitLeadershipAssessment(req, res);
       expect(res.status).toHaveBeenCalledWith(201);
       const responseArg = res.json.mock.calls[0][0];
       expect(responseArg.success).toBe(true);
-      expect(responseArg.assessment).toHaveProperty('id');
+      expect(responseArg.assessment).toMatchObject({ project_id: 1 });
     });
 
-    it('throws if the insert produces no rows', async () => {
+    it('throws if the project-scoped insert produces no rows', async () => {
       // stub the shared query helper to return empty
       const originalQuery = dbModule.query;
       jest.spyOn(dbModule, 'query').mockImplementation(() => Promise.resolve({ rows: [] }));
 
       const req = mockReq({
         body: {
-          project_id: null,
+          project_id: 1,
           assessment_type: 'leadership_diamond',
           responses: {
             vision: { q1: 3 },

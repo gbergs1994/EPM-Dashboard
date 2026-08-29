@@ -13,38 +13,23 @@ const getAllUsers = async (req, res) => {
     let queryParams = [];
     
     if (currentUserRole === 'Project Manager') {
-      // Project Managers see their team members + unassigned Team Members
+      // Project Managers see all potential team members and users
       query_str = `
-        SELECT DISTINCT u.id, u.name, u.email, u.role, u.avatar, u.current_workload, u.created_at, u.updated_at
+        SELECT DISTINCT u.id, u.name, u.email, u.role, u.avatar, COALESCE(u.current_workload, 0) as current_workload, u.created_at, u.updated_at
         FROM users u
-        LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.project_manager_id = $1
-        WHERE (
-          -- Users in this project manager's team
-          tm.user_id IS NOT NULL
-          OR
-          -- Unassigned Team Members (not in any team)
-          (u.role = 'Team Member' AND u.id NOT IN (
-            SELECT tm2.user_id FROM team_members tm2 WHERE tm2.status = 'active'
-          ))
-        )
-        AND u.id != $1  -- Exclude the project manager themselves
+        WHERE u.id != $1  -- Exclude the project manager themselves
         ORDER BY u.name ASC
       `;
       queryParams = [currentUserId];
       
     } else {
-      // Project Managers and Team Members see only users in their team
+      // General user listing
       query_str = `
-        SELECT DISTINCT u.id, u.name, u.email, u.role, u.avatar, u.current_workload, u.created_at, u.updated_at
+        SELECT DISTINCT u.id, u.name, u.email, u.role, u.avatar, COALESCE(u.current_workload, 0) as current_workload, u.created_at, u.updated_at
         FROM users u
-        INNER JOIN team_members tm1 ON u.id = tm1.user_id
-        INNER JOIN team_members tm2 ON tm1.project_manager_id = tm2.project_manager_id
-        WHERE tm2.user_id = $1
-        AND tm1.status = 'active'
-        AND tm2.status = 'active'
         ORDER BY u.name ASC
       `;
-      queryParams = [currentUserId];
+      queryParams = [];
     }
     
     const result = await query(query_str, queryParams);
@@ -54,6 +39,7 @@ const getAllUsers = async (req, res) => {
     res.json({
       success: true,
       data: result.rows,
+      users: result.rows,
       message: `Retrieved ${result.rows.length} team members`
     });
     

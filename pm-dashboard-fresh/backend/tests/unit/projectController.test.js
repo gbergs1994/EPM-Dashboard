@@ -14,15 +14,19 @@ const mockRes = () => {
 let dbModule;
 let projectController;
 
+const testDbPath = path.join(__dirname, '../../database/test_project.db');
+process.env.DB_PATH = testDbPath;
+process.env.NODE_ENV = 'test';
+
 // keep connection clean between runs
 beforeAll(() => {
-  const devPath = path.join(__dirname, '../../database/dev.db');
   try {
-    if (fs.existsSync(devPath)) fs.unlinkSync(devPath);
-  } catch (e) {
-    // ignore busy/file-in-use errors; init-db will warn if necessary
-  }
-  execSync('node init-db.js', { cwd: path.join(__dirname, '../../') });
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
+  } catch (e) {}
+  execSync('node init-db.js', { 
+    cwd: path.join(__dirname, '../../'),
+    env: { ...process.env, DB_PATH: testDbPath, NODE_ENV: 'test', FORCE_RESET: 'true' }
+  });
   dbModule = require('../../src/config/database');
   projectController = require('../../src/controllers/projectController');
 });
@@ -31,6 +35,9 @@ beforeAll(() => {
 afterAll(() => {
   try {
     if (dbModule && dbModule.db) dbModule.db.close();
+  } catch (e) {}
+  try {
+    if (fs.existsSync(testDbPath)) fs.unlinkSync(testDbPath);
   } catch (e) {}
 });
 

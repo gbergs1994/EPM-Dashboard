@@ -5,8 +5,8 @@ INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
 VALUES (
     'TestAdmin',
     'admin123@localhost.local',
-    -- bcrypt hash for "Password123!"
-    '$2a$10$OgOGPTSDqu.4woZwkrWGc.2I74mBpQd6ggz23nZCeMH9KwLdabGGq',
+    -- bcrypt hash for "password123"
+    '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS',
     'Executive Leader',
     'TA',
     CURRENT_TIMESTAMP,

@@ -129,15 +129,20 @@ db.serialize(() => {
   });
 
   // Insert default admin user
-  db.run(`INSERT OR IGNORE INTO users (name, email, role, avatar) VALUES
-    ('TestAdmin', 'admin123@localhost.local', 'Executive Leader', 'TA')`, (err) => {
+  db.run(`INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
+    ('Gunny Rittz', 'GunnyRittz@gmail.com', '$2a$10$E.Cf/G/Yjs.kBbYcLBicZO9DLlmVcdSa2v4xF75Se3v4hmbrAxBHC', 'Executive Leader', 'GR')`, (err) => {
+    if (err) console.error('Error inserting Gunny Rittz user:', err);
+  });
+
+  db.run(`INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
+    ('TestAdmin', 'admin123@localhost.local', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Executive Leader', 'TA')`, (err) => {
     if (err) console.error('Error inserting default user:', err);
     else console.log('✅ Default admin user inserted');
   });
 
   // Insert sample user
-  db.run(`INSERT OR IGNORE INTO users (name, email, role, avatar) VALUES
-    ('John Doe', 'john.doe@company.com', 'Project Manager', 'JD')`, (err) => {
+  db.run(`INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
+    ('John Doe', 'john.doe@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager', 'JD')`, (err) => {
     if (err) console.error('Error inserting sample user:', err);
     else console.log('✅ Sample user inserted');
   });

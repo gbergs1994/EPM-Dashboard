@@ -27,27 +27,31 @@ async function ensureDefaultAdmin() {
       } else {
         console.log('✅ Default admin user already present.');
       }
-      return;
+    } else {
+      // hash the password before storing
+      const bcrypt = require('bcryptjs');
+      const saltRounds = 10;
+      const hashed = await bcrypt.hash(rawPassword, saltRounds);
+      const avatar = name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+
+      const insertSql = `
+        INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `;
+
+      await query(insertSql, [name, email.toLowerCase(), hashed, role, avatar]);
+      console.log('✅ Default admin account created:', email);
     }
 
-    // hash the password before storing
+    // Ensure any existing demo/seed users with NULL passwords are set to default password
     const bcrypt = require('bcryptjs');
-    const saltRounds = 10;
-    const hashed = await bcrypt.hash(rawPassword, saltRounds);
-    const avatar = name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-
-    const insertSql = `
-      INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `;
-
-    await query(insertSql, [name, email.toLowerCase(), hashed, role, avatar]);
-    console.log('✅ Default admin account created:', email);
+    const defaultHash = await bcrypt.hash(rawPassword, 10);
+    await query('UPDATE users SET password = $1 WHERE password IS NULL', [defaultHash]);
   } catch (error) {
     console.warn('⚠️ Could not ensure default admin user (database may not be set up yet):', error.message);
   }

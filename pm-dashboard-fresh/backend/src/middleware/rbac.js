@@ -106,8 +106,11 @@ const checkProjectAccess = async (userId, projectId, requiredLevel = 'view') => 
 const checkProjectManagerTeamMembership = async (userId, projectManagerId) => {
   try {
     const teamQuery = `
+      SELECT 1 FROM team_assignments 
+      WHERE team_member_id = $1 AND project_manager_id = $2 AND status = 'active'
+      UNION
       SELECT 1 FROM team_members 
-      WHERE user_id = $1 AND project_manager_id = $2
+      WHERE user_id = $1 AND project_manager_id = $2 AND status = 'active'
     `;
     const result = await query(teamQuery, [userId, projectManagerId]);
     return result.rows.length > 0;
@@ -269,9 +272,11 @@ const getUserProjects = async (userId) => {
                'Project Manager' as user_role_in_project
         FROM projects p
         LEFT JOIN project_team_members ptm ON p.id = ptm.project_id AND ptm.user_id = $1
-        LEFT JOIN team_members tm ON p.created_by = tm.user_id AND tm.project_manager_id = $1
+        LEFT JOIN team_assignments ta ON p.created_by = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
+        LEFT JOIN team_members tm ON p.created_by = tm.user_id AND tm.project_manager_id = $1 AND COALESCE(tm.status, 'active') = 'active'
         WHERE p.created_by = $1 
            OR ptm.user_id = $1 
+           OR ta.project_manager_id = $1
            OR tm.project_manager_id = $1
         ORDER BY p.created_at DESC
       `;
@@ -316,11 +321,12 @@ const getTeamMembers = async (projectManagerId) => {
              COUNT(DISTINCT p.id) as project_count,
              COUNT(DISTINCT cdg.id) as career_goals_count
       FROM users u
-      LEFT JOIN team_members tm ON u.id = tm.user_id
+      LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
+      LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.project_manager_id = $1 AND COALESCE(tm.status, 'active') = 'active'
       LEFT JOIN project_team_members ptm ON u.id = ptm.user_id
       LEFT JOIN projects p ON ptm.project_id = p.id
       LEFT JOIN career_development_goals cdg ON u.id = cdg.user_id
-      WHERE tm.project_manager_id = $1 OR u.id = $1
+      WHERE ta.project_manager_id = $1 OR tm.project_manager_id = $1 OR u.id = $1
       GROUP BY u.id, u.name, u.email, u.role, u.created_at
       ORDER BY u.name
     `;

@@ -148,14 +148,14 @@ const OrganizationalChangeManagementTab = ({ currentUser, onDataChange }) => {
       questions: [
         {
           key: 'action_consistency',
-          question: 'How consistently do your actions align with your stated vision?',
-          description: 'Assess the degree to which your behaviors and decisions reflect your stated vision.',
+          question: "How consistently do the project's actions align with its stated vision?",
+          description: "Assess the degree to which the project's behaviors and decisions reflect its stated vision.",
           scale: 'Rate from 1 (actions rarely align) to 7 (actions consistently align)'
         },
         {
           key: 'adaptive_approach',
-          question: 'How effectively do you adapt your approach while maintaining vision integrity?',
-          description: 'Evaluate your ability to adjust tactics and methods without compromising the core vision.',
+          question: 'How effectively does the project adapt its approach while maintaining vision integrity?',
+          description: "Evaluate the project's ability to adjust tactics and methods without compromising the core vision.",
           scale: 'Rate from 1 (poor adaptation) to 7 (excellent adaptive capability)'
         },
         {

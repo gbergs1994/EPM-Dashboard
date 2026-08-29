@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS team_members (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Simple unique constraint
-    UNIQUE(user_id)
+    UNIQUE(project_manager_id, user_id)
 );
 
 -- Project ownership tracking
