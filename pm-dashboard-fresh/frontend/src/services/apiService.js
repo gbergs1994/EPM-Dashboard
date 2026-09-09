@@ -24,6 +24,10 @@ class ApiService {
       const message = errBody.message || errBody.error || errBody.details || `HTTP ${response.status}`;
       // log server error for debugging
       console.error('🚨 API responded with error status', response.status, errBody);
+      if (response.status === 401) {
+        this.logout();
+        window.dispatchEvent(new Event('auth-expired'));
+      }
       throw new Error(message);
     }
     return await response.json();

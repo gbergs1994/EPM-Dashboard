@@ -55,6 +55,12 @@ const PMDashboard = ({ onUserChange, onProjectChange }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
+
+    const handleAuthExpired = () => {
+      handleLogout();
+    };
+
+    window.addEventListener('auth-expired', handleAuthExpired);
     
     if (token && userData) {
       try {
@@ -68,6 +74,8 @@ const PMDashboard = ({ onUserChange, onProjectChange }) => {
         handleLogout();
       }
     }
+
+    return () => window.removeEventListener('auth-expired', handleAuthExpired);
   }, []);
 
   const loadUserData = async () => {
