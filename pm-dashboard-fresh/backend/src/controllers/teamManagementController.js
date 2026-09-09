@@ -30,7 +30,7 @@ class TeamManagementController {
         FROM users u
         LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
         WHERE ta.team_member_id IS NULL 
-          AND u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')
+          AND u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
           AND u.id != $1
         ORDER BY u.name ASC
       `;
@@ -104,7 +104,7 @@ class TeamManagementController {
             SELECT id, name, role, email
             FROM users
             WHERE id = $1
-              AND role IN ('Team Member', 'Manager', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer')
+              AND role IN ('Team Member', 'Executive Leader', 'Project Manager')
           `;
           const verifyResult = await query(verifyQuery, [memberId]);
 

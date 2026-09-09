@@ -1,6 +1,7 @@
 const { query } = require('../config/database');
 const { ApiError } = require('../middleware/errorHandler');
 const bcrypt = require('bcryptjs');
+const { USER_ROLES, isValidUserRole } = require('../config/roles');
 
 const getAllUsers = async (req, res) => {
   try {
@@ -88,6 +89,11 @@ const createUser = async (req, res) => {
       name, email, role, title, department, phone, 
       location, bio, skills = [], avatar, password
     } = req.body;
+
+    const userRole = role || 'Team Member';
+    if (!isValidUserRole(userRole)) {
+      throw new ApiError(`role must be one of: ${USER_ROLES.join(', ')}`, 400);
+    }
     
     const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (existingUser.rows.length > 0) {
@@ -106,7 +112,7 @@ const createUser = async (req, res) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `, [
-      name, email, hashedPassword, role, title || role, department || 'General',
+      name, email, hashedPassword, userRole, title || userRole, department || 'General',
       phone, location, bio, JSON.stringify(skills),
       avatar || name.split(' ').map(n => n[0]).join('').toUpperCase(),
       'active'
@@ -132,6 +138,10 @@ const updateUser = async (req, res) => {
       name, email, role, title, department, phone, 
       location, bio, skills, avatar, status 
     } = req.body;
+
+    if (role !== undefined && !isValidUserRole(role)) {
+      throw new ApiError(`role must be one of: ${USER_ROLES.join(', ')}`, 400);
+    }
     
     const result = await query(`
       UPDATE users SET 

@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT,
-    role TEXT,
+    role TEXT CHECK(role IN ('Team Member', 'Executive Leader', 'Project Manager')),
     avatar TEXT,
     project_manager_id INTEGER,
     current_workload INTEGER DEFAULT 0 CHECK(current_workload >= 0 AND current_workload <= 100),

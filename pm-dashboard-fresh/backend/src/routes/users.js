@@ -1,8 +1,11 @@
 const express = require('express');
 const userController = require('../controllers/userController');
 const { asyncHandler } = require('../middleware/errorHandler');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(auth);
 
 // Put specific routes BEFORE parameterized routes
 router.get('/search', asyncHandler(userController.searchUsers));

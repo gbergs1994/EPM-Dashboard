@@ -15,7 +15,7 @@ db.serialize(() => {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT,
-    role TEXT,
+    role TEXT CHECK(role IN ('Team Member', 'Executive Leader', 'Project Manager')),
     avatar TEXT,
     project_manager_id INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

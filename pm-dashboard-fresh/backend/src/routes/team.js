@@ -102,7 +102,7 @@ router.get('/project-manager',
         LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
         LEFT JOIN project_team_members ptm ON ptm.user_id = u.id
         LEFT JOIN career_development_goals cdg ON cdg.user_id = u.id
-        WHERE u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer') 
+        WHERE u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
           AND ta.team_member_id IS NULL
           AND u.id != $1
         GROUP BY u.id, u.name, u.email, u.role, u.current_workload, u.created_at
@@ -185,7 +185,7 @@ router.post('/assign',
             SELECT id, name, role, email
             FROM users 
             WHERE id = $1 
-              AND role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer')
+              AND role IN ('Team Member', 'Executive Leader', 'Project Manager')
           `;
           const verifyResult = await query(verifyQuery, [memberId]);
           

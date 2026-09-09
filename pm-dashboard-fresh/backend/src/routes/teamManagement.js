@@ -51,7 +51,7 @@ router.post('/assign', requireAuth, requireProjectManager, async (req, res) => {
       SELECT id, name, role, email
       FROM users
       WHERE id IN (${placeholders})
-        AND role IN ('Team Member', 'Project Manager', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer')
+        AND role IN ('Team Member', 'Executive Leader', 'Project Manager')
     `;
     const verifyResult = await query(verifyQuery, memberIds);
 
@@ -268,7 +268,7 @@ router.get('/project-manager', requireAuth, requireProjectManager, async (req, r
       LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
       LEFT JOIN project_team_members ptm ON ptm.user_id = u.id
       LEFT JOIN career_development_goals cdg ON cdg.user_id = u.id
-      WHERE u.role IN ('Team Member', 'Developer', 'Frontend Developer', 'Backend Developer', 'Product Manager', 'Business Analyst', 'Team Lead', 'DevOps Engineer', 'UX Designer', 'Designer', 'QA Engineer') 
+      WHERE u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
         AND ta.team_member_id IS NULL
         AND u.id != $1
       GROUP BY u.id, u.name, u.email, u.role, u.current_workload, u.created_at
@@ -280,8 +280,8 @@ router.get('/project-manager', requireAuth, requireProjectManager, async (req, r
     const statsQuery = `
       SELECT
         COUNT(*) as total_members,
-        COUNT(CASE WHEN u.role IN ('Project Manager', 'Team Lead') THEN 1 END) as leaders,
-        COUNT(CASE WHEN u.role IN ('Developer', 'Frontend Developer', 'Backend Developer') THEN 1 END) as developers,
+          COUNT(CASE WHEN u.role IN ('Project Manager', 'Executive Leader') THEN 1 END) as leaders,
+          COUNT(CASE WHEN u.role = 'Team Member' THEN 1 END) as team_members,
         COUNT(CASE WHEN u.role = 'Business Analyst' THEN 1 END) as analysts
       FROM team_assignments ta
       JOIN users u ON ta.team_member_id = u.id
