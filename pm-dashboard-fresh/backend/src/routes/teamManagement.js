@@ -51,7 +51,7 @@ router.post('/assign', requireAuth, requireProjectManager, async (req, res) => {
       SELECT id, name, role, email
       FROM users
       WHERE id IN (${placeholders})
-        AND role IN ('Team Member', 'Executive Leader', 'Project Manager')
+        AND role IS NOT NULL
     `;
     const verifyResult = await query(verifyQuery, memberIds);
 
@@ -268,9 +268,9 @@ router.get('/project-manager', requireAuth, requireProjectManager, async (req, r
       LEFT JOIN team_assignments ta ON u.id = ta.team_member_id AND ta.project_manager_id = $1 AND ta.status = 'active'
       LEFT JOIN project_team_members ptm ON ptm.user_id = u.id
       LEFT JOIN career_development_goals cdg ON cdg.user_id = u.id
-      WHERE u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
-        AND ta.team_member_id IS NULL
+      WHERE ta.team_member_id IS NULL
         AND u.id != $1
+        AND u.role IS NOT NULL
       GROUP BY u.id, u.name, u.email, u.role, u.current_workload, u.created_at
       ORDER BY u.name
     `;

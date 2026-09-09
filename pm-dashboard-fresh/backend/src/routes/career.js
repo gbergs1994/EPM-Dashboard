@@ -859,7 +859,7 @@ router.get('/iinc-summary', careerAuth, asyncHandler(async (req, res) => {
       ) s ON u.id = s.user_id
       WHERE ta.project_manager_id = $1 
         AND ta.status = 'active'
-        AND u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
+        AND u.role IS NOT NULL
       ORDER BY u.name
     `, [req.user.id]);
 

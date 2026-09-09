@@ -322,8 +322,8 @@ const getAvailableTeamMembers = async (req, res) => {
       LEFT JOIN project_team_members ptm ON u.id = ptm.user_id
       LEFT JOIN projects p ON ptm.project_id = p.id
       WHERE tm.user_id IS NULL 
-        AND u.id != $1 
-        AND u.role IN ('Team Member', 'Executive Leader', 'Project Manager')
+        AND u.id != $1
+        AND u.role IS NOT NULL
       GROUP BY u.id, u.name, u.email, u.role, u.created_at
       ORDER BY u.name
     `;
@@ -368,7 +368,7 @@ const addProjectManagerTeamMember = async (req, res) => {
     const userCheck = await query(
       `SELECT id, name, email, role FROM users 
        WHERE id = $1 
-         AND role IN ('Team Member', 'Executive Leader', 'Project Manager')`,
+         AND role IS NOT NULL`,
       [userId]
     );
 

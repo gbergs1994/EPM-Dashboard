@@ -15,7 +15,7 @@ db.serialize(() => {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT,
-    role TEXT CHECK(role IN ('Team Member', 'Executive Leader', 'Project Manager')),
+    role TEXT NOT NULL,
     avatar TEXT,
     project_manager_id INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -126,12 +126,6 @@ db.serialize(() => {
   )`, (err) => {
     if (err) console.error('Error creating goal_progress_history table:', err);
     else console.log('✅ Goal progress history table created');
-  });
-
-  // Insert default admin user
-  db.run(`INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
-    ('Gunny Rittz', 'GunnyRittz@gmail.com', '$2a$10$E.Cf/G/Yjs.kBbYcLBicZO9DLlmVcdSa2v4xF75Se3v4hmbrAxBHC', 'Executive Leader', 'GR')`, (err) => {
-    if (err) console.error('Error inserting Gunny Rittz user:', err);
   });
 
   db.run(`INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES

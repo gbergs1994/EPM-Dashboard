@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT,
-    role TEXT CHECK(role IN ('Team Member', 'Executive Leader', 'Project Manager')),
+    role TEXT NOT NULL,
     avatar TEXT,
     project_manager_id INTEGER,
     current_workload INTEGER DEFAULT 0 CHECK(current_workload >= 0 AND current_workload <= 100),
@@ -261,9 +261,8 @@ CREATE TABLE IF NOT EXISTS user_skills (
     UNIQUE(user_id, skill_name)
 );
 
--- Insert sample data (default password for demo users: password123, GunnyRittz: Password123!)
+-- Insert sample data (default password for demo users: password123)
 INSERT OR IGNORE INTO users (name, email, password, role, avatar) VALUES
-('Gunny Rittz', 'GunnyRittz@gmail.com', '$2a$10$E.Cf/G/Yjs.kBbYcLBicZO9DLlmVcdSa2v4xF75Se3v4hmbrAxBHC', 'Executive Leader', 'GR'),
 ('TestAdmin', 'admin123@localhost.local', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Executive Leader', 'TA'),
 ('John Doe', 'john.doe@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Project Manager', 'JD'),
 ('Jane Smith', 'jane.smith@company.com', '$2a$10$gCYp1JrLTzoZ3RZiTjLjEO7bvtPthffYYGl6xTnHEbogdRkG.FrHS', 'Frontend Developer', 'JS'),

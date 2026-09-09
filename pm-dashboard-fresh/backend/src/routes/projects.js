@@ -63,7 +63,13 @@ router.get('/users/available', auth, async (req, res) => {
     console.log(`📡 GET /api/projects/users/available`);
 
     const usersResult = await query(
-      'SELECT id, name, email, role, COALESCE(current_workload, 0) as current_workload FROM users WHERE id != $1 ORDER BY name',
+      `SELECT id, name, email,
+        CASE
+          WHEN role IN ('Team Member', 'Executive Leader', 'Project Manager') THEN role
+          ELSE 'Team Member'
+        END AS role,
+        COALESCE(current_workload, 0) as current_workload
+      FROM users WHERE id != $1 ORDER BY name`,
       [req.user.id]
     );
 

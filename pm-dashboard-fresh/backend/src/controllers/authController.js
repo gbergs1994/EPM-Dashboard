@@ -1,7 +1,7 @@
 // backend/src/controllers/authController.js
 const { query } = require('../config/database');
 const bcrypt = require('bcryptjs'); // Make sure you have this installed
-const { USER_ROLES } = require('../config/roles');
+const { USER_ROLES, normalizeUserRole } = require('../config/roles');
 
 // Add this missing register function!
 const register = async (req, res) => {
@@ -17,8 +17,8 @@ const register = async (req, res) => {
       });
     }
     
-    // Validate role - allow Team Member, Project Manager, or Executive Leader during registration
-    const userRole = role && USER_ROLES.includes(role) ? role : 'Team Member';
+    // Validate role - allow only the canonical three roles during registration
+    const userRole = normalizeUserRole(role);
     
     // Check if user already exists
     const existingUser = await query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);

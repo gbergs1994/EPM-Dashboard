@@ -2,7 +2,11 @@ services:
   - type: web
     name: pm-dashboard
     env: node
-    plan: free
+    plan: starter
+    disk:
+      name: pm-dashboard-data
+      mountPath: /var/data
+      sizeGB: 1
     rootDir: .
     buildCommand: >-
       cd pm-dashboard-fresh &&
@@ -20,3 +24,5 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      - key: DB_PATH
+        value: /var/data/pm-dashboard.db

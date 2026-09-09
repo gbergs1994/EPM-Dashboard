@@ -6,8 +6,7 @@ const fs = require('fs');
 const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database/dev.db');
 const schemaPath = path.join(__dirname, '../../database/schema.sql');
 
-// Ensure the database directory exists before sqlite3 tries to create the file
-// (Render's disk is ephemeral, so dev.db won't exist on a fresh deploy).
+// Ensure the database directory exists before sqlite3 tries to create the file.
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });

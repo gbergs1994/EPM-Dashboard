@@ -2,6 +2,8 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
+const { normalizeUserRole } = require('../../src/config/roles');
+
 const mockReq = ({ user = { id: 1, role: 'Project Manager' }, body = {}, query = {}, params = {} } = {}) => ({
   user,
   body,
@@ -110,6 +112,13 @@ describe('Multiple Project Managers team member support', () => {
     expect(res.json).toHaveBeenCalled();
     const data = res.json.mock.calls[0][0];
     expect(data.success).toBe(true);
+  });
+
+  it('normalizes unsupported custom roles to Team Member', () => {
+    expect(normalizeUserRole('Frontend Developer')).toBe('Team Member');
+    expect(normalizeUserRole('Project Manager')).toBe('Project Manager');
+    expect(normalizeUserRole('Executive Leader')).toBe('Executive Leader');
+    expect(normalizeUserRole('Team Member')).toBe('Team Member');
   });
 
   it('shows the shared team member in getAllUsers for both project managers', async () => {

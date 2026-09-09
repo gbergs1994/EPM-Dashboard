@@ -1,7 +1,7 @@
 const { query } = require('../config/database');
 const { ApiError } = require('../middleware/errorHandler');
 const bcrypt = require('bcryptjs');
-const { USER_ROLES, isValidUserRole } = require('../config/roles');
+const { USER_ROLES, isValidUserRole, normalizeUserRole, normalizeUserRoles } = require('../config/roles');
 
 const getAllUsers = async (req, res) => {
   try {
@@ -34,14 +34,15 @@ const getAllUsers = async (req, res) => {
     }
     
     const result = await query(query_str, queryParams);
+    const normalizedRows = normalizeUserRoles(result.rows);
     
-    console.log(`Found ${result.rows.length} team users for role: ${currentUserRole}`);
+    console.log(`Found ${normalizedRows.length} team users for role: ${currentUserRole}`);
     
     res.json({
       success: true,
-      data: result.rows,
-      users: result.rows,
-      message: `Retrieved ${result.rows.length} team members`
+      data: normalizedRows,
+      users: normalizedRows,
+      message: `Retrieved ${normalizedRows.length} team members`
     });
     
   } catch (error) {
@@ -90,7 +91,7 @@ const createUser = async (req, res) => {
       location, bio, skills = [], avatar, password
     } = req.body;
 
-    const userRole = role || 'Team Member';
+    const userRole = normalizeUserRole(role || 'Team Member');
     if (!isValidUserRole(userRole)) {
       throw new ApiError(`role must be one of: ${USER_ROLES.join(', ')}`, 400);
     }
@@ -139,8 +140,12 @@ const updateUser = async (req, res) => {
       location, bio, skills, avatar, status 
     } = req.body;
 
-    if (role !== undefined && !isValidUserRole(role)) {
-      throw new ApiError(`role must be one of: ${USER_ROLES.join(', ')}`, 400);
+    if (role !== undefined) {
+      const normalizedRole = normalizeUserRole(role);
+      if (!isValidUserRole(normalizedRole)) {
+        throw new ApiError(`role must be one of: ${USER_ROLES.join(', ')}`, 400);
+      }
+      req.body.role = normalizedRole;
     }
     
     const result = await query(`
@@ -151,7 +156,7 @@ const updateUser = async (req, res) => {
       WHERE id = $12
       RETURNING *
     `, [
-      name, email, role, title, department, phone, 
+      name, email, req.body.role ?? role, title, department, phone, 
       location, bio, JSON.stringify(skills), avatar, status, id
     ]);
     
@@ -451,13 +456,14 @@ const searchUsers = async (req, res) => {
       ORDER BY name ASC
       LIMIT 20
     `, [`%${q}%`]);
+    const normalizedRows = normalizeUserRoles(result.rows);
     
-    console.log(`Found ${result.rows.length} users matching "${q}"`);
+    console.log(`Found ${normalizedRows.length} users matching "${q}"`);
     
     res.json({
       success: true,
-      data: result.rows,
-      message: `Found ${result.rows.length} users matching "${q}"`
+      data: normalizedRows,
+      message: `Found ${normalizedRows.length} users matching "${q}"`
     });
     
   } catch (error) {
